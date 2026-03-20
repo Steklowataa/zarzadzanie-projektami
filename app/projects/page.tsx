@@ -6,6 +6,7 @@ import { Project } from "../../types/project"
 import { User } from "../../types/user"
 import { useActiveProject } from "../../lib/useActiveProject"
 
+
 export default function ProjectPage() {
 
     const mocUser: User = {
@@ -68,6 +69,9 @@ export default function ProjectPage() {
             >
                 Edit
             </button>
+            <div>
+                <Link href={`/projects/${activeProject.id}/stories`} className="text-blue-600 hover:underline cursor-pointer">Go to Stories</Link>
+            </div>
         </div>
     </div>
 )}
