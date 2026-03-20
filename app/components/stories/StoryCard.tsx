@@ -1,14 +1,31 @@
 import { Story } from "@/types/story";
-import { Lightbulb, PencilLine } from "lucide-react";
+import { Lightbulb, PencilLine, Trash2 } from "lucide-react";
 import { STORY_PRIORITIES, PriorityLevel } from "../../../types/prioritets"
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { StoryService } from "../../../lib/storyServices";
+import { useRouter} from "next/navigation";
+
 
 interface StoryCardProps {
   story: Story;
   accentColor: string;
 }
 
+
 export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
   const priorityConfig = STORY_PRIORITIES[story.priority as PriorityLevel] || STORY_PRIORITIES.low;
+  const router = useRouter()
+  const { projectId } = useParams()
+
+  const handleFelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if(confirm("Are you sure you want to delete this story?")) {
+      StoryService.delete(story.id)
+      router.refresh()
+      window.location.reload()
+    }
+  }
   
   return (
     <div 
@@ -17,9 +34,14 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
       <div className="bg-black/60 backdrop-blur-xs rounded-2xl p-6 h-full flex flex-col">
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-xl font-bold text-white">{story.name}</h3>
-          <button className="text-gray-400 hover:text-white transition cursor-pointer">
-            <PencilLine size={18} />
-          </button>
+          <div className="flex gap-4">
+            <Link href={`/projects/${projectId}/stories/${story.id}/edit`}>
+              <PencilLine size={18} />
+            </Link>
+            <button onClick={handleFelete} className="cursor-pointer">
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
 
         <p className="text-gray-300 text-sm leading-relaxed mb-8 flex-grow">
@@ -27,7 +49,7 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
         </p>
 
         <div className="flex justify-between items-center mt-auto pt-4 border-t border-white/5">
-          <span className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">
+          <span className="text-[10px] text-gray-300 uppercase tracking-widest font-mono">
             {new Date(story.createdAt).toLocaleDateString()}
           </span>
           
@@ -41,7 +63,12 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
               }} 
               fill="currentColor"
             />
-            <span className="absolute bottom-full w-[80] left-7 text-black hidden group-hover/tooltip:block bg-white/60 border border-white/20 text-[10px] px-2 py-1 rounded">
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[100] w-max px-3 py-1.5 bg-white/80 backdrop-blur-md 
+              text-black text-[10px] font-bold uppercase tracking-wider
+              rounded-lg border border-white/40
+              pointer-events-none
+              hidden group-hover/tooltip:block
+              shadow-[0_4_15px_rgba(0,0,0,0.3)]">
               Priority: {story.priority}
             </span>
           </div>
