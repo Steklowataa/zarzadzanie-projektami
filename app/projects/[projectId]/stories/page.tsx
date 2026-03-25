@@ -1,12 +1,16 @@
 "use client"
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import CreateButton from "../../../components/stories/CreateButton";
 import { Story } from "@/types/story";
 import { StoryService } from "../../../../lib/storyServices";
 import { StatusTabs } from "../../../components/stories/StatusBar";
 import { StoryCard } from "../../../components/stories/StoryCard";
 import Image from "next/image";
+import { useActiveProject } from "../../../../lib/useActiveProject";
+import { Project } from "../../../../types/project";
+import theme from "../../../themes/theme"
+
 
 export default function StoriesPage() {
   const { projectId } = useParams() as { projectId: string };
@@ -14,34 +18,25 @@ export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [activeStatus, setActiveStatus] = useState<Story["status"]>("todo");
 
+  const { activeProjectId, setActiveProject } = useActiveProject()
+  const [projects, setProjects] = useState<Project[]>(() => {
+          if (typeof window !== "undefined") {
+              return JSON.parse(localStorage.getItem("projects") || "[]")
+          }
+          return []
+      })
+  const activeProject = projects.find(p => p.id === activeProjectId)
+
   useEffect(() => {
     setStories(StoryService.getAllByProject(projectId));
   }, [projectId]);
 
-  const theme = {
-    todo: {
-      gradient: "linear-gradient(to bottom right, #B9FF68, #80CF23)",
-      glow: "0 0 30px rgba(185, 255, 104, 0.2)",
-      accent: "#B9FF68"
-    },
-    "in progress": {
-      gradient: "linear-gradient(to bottom right, #FFB347, #FFCC33)",
-      glow: "0 0 30px rgba(255, 179, 71, 0.2)",
-      accent: "#FFB347"
-    },
-    done: {
-      gradient: "linear-gradient(to bottom right, #FFFFFF, #9CA3AF)",
-      glow: "0 0 30px rgba(255, 255, 255, 0.1)",
-      accent: "#FFFFFF"
-    }
-  };
 
   const currentTheme = theme[activeStatus];
   const filteredStories = stories.filter(s => s.status === activeStatus);
 
   return (
     <div className="relative p-12 min-h-screen text-white">
-      {/* TŁO - FIXED */}
       <div className="fixed inset-0 z-[-1] bg-[#0a0a0a]">
         <Image alt="bg" fill src="/images/bg-kanban.png" className="object-cover opacity-60" priority />
       </div>
@@ -50,13 +45,14 @@ export default function StoriesPage() {
       <div className="relative z-20 flex justify-between items-end mb-6 px-2">
         <h1 className="text-4xl font-black italic tracking-tighter transition-colors duration-700" 
             style={{ color: currentTheme.accent }}>
-          PROJECT_STORIES
+          { activeProject?.name || "Project" }
         </h1>
+        <CreateButton title="Create Story" onClick={() => router.push(`/projects/${projectId}/stories/create`)} />
       </div>
 
       <StatusTabs activeStatus={activeStatus} onStatusChange={setActiveStatus} />
       
-      {/* 1. KONTENER RAMKI (Gradient + Glow) */}
+      {/* KONTENER RAMKI */}
       <div 
         className="relative rounded-[40px] p-[3px] transition-all duration-700 ease-in-out"
         style={{ 
@@ -64,8 +60,7 @@ export default function StoriesPage() {
           boxShadow: currentTheme.glow 
         }}
       >
-        {/* 2. WARSTWA BLURA (Izolowana) */}
-        {/* Ten div nie ma dzieci, zajmuje się tylko rozmyciem tła pod sobą */}
+        {/* WARSTWA BLURA */}
         <div 
           className="absolute inset-[3px] rounded-[37px] z-0"
           style={{
@@ -75,7 +70,7 @@ export default function StoriesPage() {
           }}
         />
 
-        {/* 3. WARSTWA TREŚCI (Z-index wyżej niż blur) */}
+        {/*  WARSTWA TREŚCI */}
         <div className="relative z-10 p-10 min-h-[600px] rounded-[37px] border border-white/10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredStories.map((story) => (

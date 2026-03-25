@@ -3,12 +3,19 @@ import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { v4 as uuidv4 } from "uuid" 
 import { Story } from "@/types/story"
-import { StoryService } from "../../../../../lib/storyServices"
+import { StoryService } from "@/lib/storyServices"
+import { User } from "@/types/user" 
 
 export default function CreateStoryPage() {
     const params = useParams()
     const router = useRouter()
     const projectId = params.projectId as string
+
+    const mockUser: User = {
+        id: "1",
+        name: "John",
+        email: "test@gmail.com"
+    }
 
     const [formData, setFormData] = useState({
         name: "",
@@ -25,50 +32,51 @@ export default function CreateStoryPage() {
             ...formData,
             projectId: projectId, 
             createdAt: new Date().toISOString(),
-            ownerId: "1" 
+            ownerId: mockUser.id 
         }
 
         StoryService.create(newStory)
-        
         router.push(`/projects/${projectId}/stories`)
     }
 
     return (
-        <div className="max-w-2xl mx-auto p-8">
-            <h1 className="text-2xl font-bold mb-6 text-white">Add New Story</h1>
+        <div className="max-w-2xl mx-auto p-8 text-white">
+            {/* Informacja o autorze (opcjonalnie, dla debugowania) */}
+            <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest">
+                Creating as: <span className="text-[#B9FF68]">{mockUser.name}</span>
+            </p>
             
-            <form onSubmit={handleSubmit} className="space-y-4 bg-gray-900 p-6 rounded-lg border border-gray-800">
-                {/* Name */}
+            <h1 className="text-3xl font-black italic mb-8 tracking-tighter">ADD_NEW_STORY</h1>
+            
+            <form onSubmit={handleSubmit} className="space-y-6 bg-[#1a1a1a]/80 backdrop-blur-xl p-8 rounded-[30px] border border-white/10 shadow-xl">
                 <div>
-                    <label className="block text-sm font-medium mb-1">Story Name</label>
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Story Name</label>
                     <input
                         required
                         type="text"
-                        className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white outline-none focus:border-blue-500"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[#B9FF68] transition"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="e.g. Implement Login logic"
                     />
                 </div>
 
-                {/* Description */}
                 <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Description</label>
                     <textarea
                         required
-                        className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white outline-none focus:border-blue-500 h-32"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[#B9FF68] transition h-32 resize-none"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Detailed task description..."
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    {/* Status */}
+                <div className="grid grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Status</label>
+                        <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Status</label>
                         <select
-                            className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white outline-none"
+                            className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl px-4 py-3 text-white outline-none cursor-pointer"
                             value={formData.status}
                             onChange={(e) => setFormData({ ...formData, status: e.target.value as Story["status"] })}
                         >
@@ -78,11 +86,10 @@ export default function CreateStoryPage() {
                         </select>
                     </div>
 
-                    {/* Priority */}
                     <div>
-                        <label className="block text-sm font-medium mb-1">Priority</label>
+                        <label className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Priority</label>
                         <select
-                            className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white outline-none"
+                            className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl px-4 py-3 text-white outline-none cursor-pointer"
                             value={formData.priority}
                             onChange={(e) => setFormData({ ...formData, priority: e.target.value as Story["priority"] })}
                         >
@@ -96,14 +103,14 @@ export default function CreateStoryPage() {
                 <div className="flex gap-4 mt-8">
                     <button
                         type="submit"
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition"
+                        className="flex-1 bg-[#B9FF68] hover:scale-[1.02] text-black font-black py-4 rounded-full transition uppercase text-sm shadow-lg shadow-[#B9FF68]/10"
                     >
                         Create Story
                     </button>
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition"
+                        className="flex-1 border border-white/10 hover:bg-white/5 text-white font-bold py-4 rounded-full transition uppercase text-xs tracking-widest"
                     >
                         Cancel
                     </button>
