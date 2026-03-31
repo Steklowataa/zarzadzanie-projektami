@@ -22,7 +22,15 @@ export default function TaskKanbanPage() {
     setTasks(TaskService.getAllByStory(storyId));
   };
 
+  //dropdown dla status
+  const handleComplete = (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation()
+    TaskService.completeTask(taskId)
+    setDropdown(null)
+    refreshTask()
+  }
 
+  //dropdown dla wyboru usera
   const handleAssignUser = (e: React.MouseEvent, taskId: string, userId: string) => {
     e.stopPropagation();
     TaskService.assignUser(taskId, userId);
@@ -63,14 +71,20 @@ export default function TaskKanbanPage() {
               <div className="space-y-4">
                 {tasks.filter(t => t.status === col.id).map(task => {
                   const owner = users.find(u => u.id === task.ownerId);
-                  const isDropdownOpen = openDropdown === task.id;
 
                   return (
                     <div 
                       key={task.id}
                       onClick={() => router.push(`/projects/${projectId}/stories/${storyId}/tasks/${task.id}`)}
                       className="group bg-[#1a1a1a]/80 p-5 rounded-2xl border border-white/5 hover:border-[#B9FF68]/40 transition-all cursor-pointer shadow-lg relative">
-                      <TaskCard task={task} owner={owner} isDropdownOpen={isDropdownOpen} setDropdown={setDropdown} users={users} handleAssignUser={handleAssignUser} />
+                      <TaskCard 
+                        task={task} 
+                        owner={owner} 
+                        openDropdown={openDropdown} 
+                        setDropdown={setDropdown}
+                        users={users}
+                        handleAssignUser={handleAssignUser}
+                        handleComplete={handleComplete} />
                     </div>
                   );
                 })}
