@@ -1,14 +1,14 @@
 export const STORY_PRIORITIES = {
   low: {
-    color: "#25B3FF", // Niebieski
+    color: "#25B3FF", 
     label: "Low",
   },
   medium: {
-    color: "#80CF23", // Soczysta zieleń
+    color: "#80CF23", 
     label: "Medium",
   },
   high: {
-    color: "#FF4B4B", // Proponowany czerwony dla wysokiego (możesz zmienić)
+    color: "#FF4B4B", 
     label: "High",
   },
 } as const;

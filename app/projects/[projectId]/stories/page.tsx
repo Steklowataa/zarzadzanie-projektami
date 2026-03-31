@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import CreateButton from "../../../components/stories/CreateButton";
+import CreateButton from "../../../components/CreateButton";
 import { Story } from "@/types/story";
 import { StoryService } from "../../../../lib/storyServices";
 import { StatusTabs } from "../../../components/stories/StatusBar";
@@ -9,7 +9,7 @@ import { StoryCard } from "../../../components/stories/StoryCard";
 import Image from "next/image";
 import { useActiveProject } from "../../../../lib/useActiveProject";
 import { Project } from "../../../../types/project";
-import theme from "../../../themes/theme"
+import { theme } from "@/types/themes/themes"
 
 
 export default function StoriesPage() {

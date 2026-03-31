@@ -26,10 +26,16 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
       window.location.reload()
     }
   }
+
+  //przejscie do taskow
+  const handleClick = () => {
+    router.push(`/projects/${projectId}/stories/${story.id}/tasks`)
+  }
   
   return (
     <div 
-      className="relative rounded-2xl p-[1px] transition-all duration-700"
+      onClick={handleClick}
+      className="relative rounded-2xl p-[1px] transition-all duration-700 hover:scale-[1.05] cursor-pointer"
       style={{ background: `linear-gradient(to bottom right, ${accentColor}, transparent)` }}>
       <div className="bg-black/60 backdrop-blur-xs rounded-2xl p-6 h-full flex flex-col">
         <div className="flex justify-between items-start mb-4">
@@ -59,7 +65,7 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
               size={22} 
               style={{ 
                 color: priorityConfig.color, 
-                filter: `drop-shadow(0 0 8px ${accentColor})` 
+                filter: `drop-shadow(0 0 8px ${priorityConfig.color})` 
               }} 
               fill="currentColor"
             />

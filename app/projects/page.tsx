@@ -3,17 +3,17 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Project } from "../../types/project"
-import { User } from "../../types/user"
 import { useActiveProject } from "../../lib/useActiveProject"
+import { currentUser } from "../../types/mockUpUsers"
 
 
 export default function ProjectPage() {
 
-    const mocUser: User = {
-        id: "1",
-        name: "John",
-        email: "test@gmail.com"
-    }
+    // const mocUser: User = {
+    //     id: "1",
+    //     name: "John",
+    //     email: "test@gmail.com"
+    // }
 
     const router = useRouter()
     const [projects, setProjects] = useState<Project[]>(() => {
@@ -35,7 +35,7 @@ export default function ProjectPage() {
     return (
         <div className="p-8">
             <h1 className="text-2xl font-bold mb-4">Projects</h1>
-            <h2 className="text-xl font-semibold mb-4">Zalogowany uzytkownik: {mocUser.name}</h2>
+            <h2 className="text-xl font-semibold mb-4">Zalogowany uzytkownik: {currentUser.name}</h2>
             <Link href="/projects/create" className="bg-white pl-3 pr-3 pt-3 pb-3 rounded-full text-black cursor-pointer">Create Project</Link>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">

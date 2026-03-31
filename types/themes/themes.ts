@@ -1,4 +1,4 @@
- const theme = {
+const theme = {
     todo: {
       gradient: "linear-gradient(to bottom right, #B9FF68, #80CF23)",
       glow: "0 0 30px rgba(185, 255, 104, 0.2)",
@@ -16,4 +16,10 @@
     }
   };
   
-export default theme;
+const columns = [
+    { id: "todo", title: "TO DO", color: "#60A5FA" },
+    { id: "in progress", title: "DOING", color: "#FBBF24" },
+    { id: "done", title: "DONE", color: "#B9FF68" }
+  ];
+
+export { theme, columns} ;
