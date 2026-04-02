@@ -4,7 +4,7 @@ import CreateButton from "../CreateButton"
 export default function Header({ story, router, projectId, storyId }: { story: any, router: any, projectId: string, storyId: string }) {
     return (
         <div className="relative z-20 mb-10">
-        <BackBtn title="Back to Stories" router={router} projectId={projectId} />
+        <BackBtn title="Back to Stories" onClick={() => router.push(`/projects/${projectId}/stories`)}/>
         <div className="flex justify-between items-end mt-4">
           <div>
             <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">

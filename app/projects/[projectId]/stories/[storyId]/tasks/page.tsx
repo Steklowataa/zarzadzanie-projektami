@@ -51,7 +51,7 @@ export default function TaskKanbanPage() {
         <Image alt="bg" fill src="/images/bg-kanban.png" className="object-cover opacity-40" priority />
       </div>
 
-      {/* Header Section */}
+      {/* Header */}
       <Header router={router} story={story} projectId={projectId} storyId={storyId} />
 
       {/* Kanban Board Grid */}

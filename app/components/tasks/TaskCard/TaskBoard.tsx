@@ -20,8 +20,7 @@ export const TaskBoard = ({ tasks, onTaskClick }: { tasks: Task[], onTaskClick: 
               <div 
                 key={task.id}
                 onClick={() => onTaskClick(task.id)}
-                className="bg-[#1a1a1a] p-4 rounded-xl border border-white/10 hover:border-[#B9FF68]/50 cursor-pointer transition group"
-              >
+                className="bg-[#1a1a1a] p-4 rounded-xl border border-white/10 hover:border-[#B9FF68]/50 cursor-pointer transition group" >
                 <h4 className="font-bold text-sm mb-2 group-hover:text-[#B9FF68]">{task.name}</h4>
                 <div className="flex justify-between items-center">
                    <span className="text-[10px] text-gray-500">
