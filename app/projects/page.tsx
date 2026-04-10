@@ -6,6 +6,8 @@ import { Project } from "../../types/project"
 import { useActiveProject } from "../../lib/useActiveProject"
 import { currentUser } from "../../types/mockUpUsers"
 import ProjectFilter from "../components/projects/ProjectFilter"
+import Header from "../components/projects/Header"
+
 
 export default function ProjectPage() {
     const router = useRouter()
@@ -31,15 +33,13 @@ export default function ProjectPage() {
         : projects.filter(p => p.id === activeProjectId)
 
     return (
-        <div className="p-8 text-white">
+            <>
+            <Header userName={currentUser.name}/>
+                     <div className="p-6 text-white">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-4xl font-black italic uppercase tracking-tighter">Projects</h1>
-                    <p className="text-gray-500 text-sm">User: {currentUser.name}</p>
                 </div>
-                <Link href="/projects/create" className="bg-[#B9FF68] px-6 py-3 rounded-full text-black font-bold uppercase text-sm hover:scale-105 transition-transform">
-                    + Create Project
-                </Link>
             </div>
 
             <ProjectFilter showAll={showAll} setShowAll={setShowAll} />
@@ -87,5 +87,6 @@ export default function ProjectPage() {
                 </div>
             )}
         </div>
+        </>
     )
 }

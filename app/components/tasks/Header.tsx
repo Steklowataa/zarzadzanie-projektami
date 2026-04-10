@@ -12,7 +12,9 @@ export default function Header({ story, router, projectId, storyId }: { story: a
             </h1>
             <p className="text-gray-500 mt-2 text-sm max-w-xl line-clamp-1">{story?.description}</p>
           </div>
-          <CreateButton title="Create Task" router={router} projectId={projectId} storyId={storyId} />
+          <CreateButton 
+            title="Create Task" 
+            onClick={() => router.push(`/projects/${projectId}/stories/${storyId}/tasks/create`)} />
         </div>
       </div>
 

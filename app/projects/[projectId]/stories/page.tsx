@@ -47,7 +47,9 @@ export default function StoriesPage() {
             style={{ color: currentTheme.accent }}>
           { activeProject?.name || "Project" }
         </h1>
-        <CreateButton title="Create Story" onClick={() => router.push(`/projects/${projectId}/stories/create`)} />
+       <CreateButton 
+          title="Create Story" 
+          onClick={() => router.push(`/projects/${projectId}/stories/create`)} />
       </div>
 
       <StatusTabs activeStatus={activeStatus} onStatusChange={setActiveStatus} />

@@ -1,5 +1,6 @@
 import { Task } from "../types/task";
 import { StoryService } from "./storyServices";
+import {APP_EVENTS, eventBus } from "@/utils/eventBus";
 
 export class TaskService {
     private static STORAGE_KEY = "tasks";
@@ -29,13 +30,21 @@ export class TaskService {
         }
     }
 
-    /**
-     * CRUD: TWORZENIE NOWEGO ZADANIA
-     */
+
     static create(task: Task): void {
         const existingTasks = this.getRawTasks();
         const updatedTasks = [...existingTasks, task];
         this._saveTasks(updatedTasks);
+        const story = StoryService.getById(task.storyId);
+        
+        if (story && story.ownerId) {
+             eventBus.emit(APP_EVENTS.TASK_CREATED, { 
+                    ownerId: story.ownerId,
+                    taskName: task.name,
+                    storyName: story.name,
+                });
+        }
+
         console.log("Zapisano! Aktualna liczba zadań w bazie:", updatedTasks.length);
     }
 
@@ -65,14 +74,17 @@ export class TaskService {
         const index = tasks.findIndex(t => t.id === taskId);
         
         if (index !== -1) {
-            // Aktualizacja zadania
             tasks[index].ownerId = userId;
             tasks[index].status = "in progress"; 
             tasks[index].dateStart = new Date().toISOString();
             
             this._saveTasks(tasks);
 
-            // Aktualizacja historyjki (jeśli była w TODO)
+            eventBus.emit(APP_EVENTS.TASK_ASSIGNED, { 
+                    userId: userId,
+                    taskName: tasks[index].name,
+                });
+
             const story = StoryService.getById(tasks[index].storyId);
             if (story && story.status === "todo") {
                 story.status = "in progress";
