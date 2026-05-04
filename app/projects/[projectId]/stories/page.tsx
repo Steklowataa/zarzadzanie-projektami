@@ -1,52 +1,69 @@
-"use client"
+"use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import CreateButton from "../../../components/CreateButton";
 import { Story } from "@/types/story";
-import { StoryService } from "../../../../lib/storyServices";
+import { StoryService } from "@/lib/storyServices"; 
+import { ProjectService } from "../../../../lib/ProjectService";
 import { StatusTabs } from "../../../components/stories/StatusBar";
 import { StoryCard } from "../../../components/stories/StoryCard";
 import Image from "next/image";
-import { useActiveProject } from "../../../../lib/useActiveProject";
 import { Project } from "../../../../types/project";
-import { theme } from "@/types/themes/themes"
+import { theme } from "@/types/themes/themes";
 import BackBtn from "../../../components/tasks/BackBtn";
-
 
 export default function StoriesPage() {
   const { projectId } = useParams() as { projectId: string };
   const router = useRouter();
+  
   const [stories, setStories] = useState<Story[]>([]);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [activeStatus, setActiveStatus] = useState<Story["status"]>("todo");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { activeProjectId, setActiveProject } = useActiveProject()
-  const [projects, setProjects] = useState<Project[]>(() => {
-          if (typeof window !== "undefined") {
-              return JSON.parse(localStorage.getItem("projects") || "[]")
-          }
-          return []
-      })
-  const activeProject = projects.find(p => p.id === activeProjectId)
+  const refreshData = async () => {
+    setIsLoading(true);
+    try {
+      const [projectData, storiesData] = await Promise.all([
+        ProjectService.getById(projectId),
+        StoryService.getAllByProject(projectId)
+      ]);
+      
+      if (projectData) setActiveProject(projectData);
+      setStories(storiesData);
+    } catch (error) {
+      console.error("Error refreshing stories:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setStories(StoryService.getAllByProject(projectId));
+    refreshData();
   }, [projectId]);
-
 
   const currentTheme = theme[activeStatus];
   const filteredStories = stories.filter(s => s.status === activeStatus);
+
+  if (isLoading) {
+    return <div className="p-12 text-white font-black italic uppercase">Loading Stories...</div>;
+  }
 
   return (
     <div className="relative p-12 min-h-screen text-white">
       <div className="fixed inset-0 z-[-1] bg-[#0a0a0a]">
         <Image alt="bg" fill src="/images/bg-kanban.png" className="object-cover opacity-60" priority />
       </div>
+      
       <BackBtn title="Back to Projects" onClick={() => router.push(`/projects/`)}/>
+      
       <div className="relative z-20 flex justify-between items-end mb-6 px-2">
-        <h1 className="text-4xl font-black italic tracking-tighter transition-colors duration-700" 
-            style={{ color: currentTheme.accent }}>
-          { activeProject?.name || "Project" }
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-4xl font-black italic tracking-tighter transition-colors duration-700" 
+              style={{ color: currentTheme.accent }}>
+            { activeProject?.name || "Untitled Project" }
+          </h1>
+        </div>
        <CreateButton 
           title="Create Story" 
           onClick={() => router.push(`/projects/${projectId}/stories/create`)} />
