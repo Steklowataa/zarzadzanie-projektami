@@ -1,129 +1,107 @@
 import { Task } from "../types/task";
 import { StoryService } from "./storyServices";
 import {APP_EVENTS, eventBus } from "@/utils/eventBus";
+import { db } from "@/firebase";
+import { collection, getDocs, getDoc, doc, setDoc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
 
 export class TaskService {
-    private static STORAGE_KEY = "tasks";
+    private static collectionName = "tasks";
 
-
-    private static getRawTasks(): Task[] {
-        if (typeof window === "undefined") return [];
-        const data = localStorage.getItem(this.STORAGE_KEY);
+    static async getAllByStory(storyId: string): Promise<Task[]> {
         try {
-            return data ? JSON.parse(data) : [];
+            const q = query(
+                collection(db, this.collectionName), 
+                where("storyId", "==", storyId)
+            );
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id
+            } as Task));
         } catch (e) {
-            console.error("Błąd parsowania localStorage:", e);
+            console.error("Błąd pobierania tasks:", e);
             return [];
         }
     }
 
-    /**
-     * ZAPISYWANIE DANYCH
-     * Centralna metoda zapisu
-     */
-    private static _saveTasks(tasks: Task[]): void {
-        if (typeof window !== "undefined") {
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tasks));
-        }
+    static async getById(taskId: string): Promise<Task | undefined> {
+        if (!taskId) return undefined;
+        const docRef = doc(db, this.collectionName, taskId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? {
+            ...docSnap.data(),
+            id: docSnap.id
+        } as Task : undefined;
+
     }
 
 
-    static create(task: Task): void {
-        const existingTasks = this.getRawTasks();
-        const updatedTasks = [...existingTasks, task];
-        this._saveTasks(updatedTasks);
-        const story = StoryService.getById(task.storyId);
-        
-        if (story && story.ownerId) {
-             eventBus.emit(APP_EVENTS.TASK_CREATED, { 
-                    ownerId: story.ownerId,
-                    taskName: task.name,
+    static async create(task: Task): Promise<void> {
+        try {
+            await setDoc(doc(db, this.collectionName, task.id), task);
+            const story = await StoryService.getById(task.storyId);
+
+            if (story && story.ownerId) {
+               eventBus.emit(APP_EVENTS.TASK_CREATED, {
+                    userId: story.ownerId,
                     storyName: story.name,
+                    taskName: task.name
                 });
+            }
+        } catch (e) {
+            console.error("Błąd zapisu w Firebase:", e);
+        }
+    
         }
 
-        console.log("Zapisano! Aktualna liczba zadań w bazie:", updatedTasks.length);
+        static async assignUser(taskId: string, userId: string): Promise<void> {
+        const task = await this.getById(taskId);
+        if (!task) return;
+
+        const taskRef = doc(db, this.collectionName, taskId);
+        const updateData = {
+            ownerId: userId,
+            status: "in progress" as const,
+            dateStart: new Date().toISOString()
+        };
+
+        await updateDoc(taskRef, updateData);
+
+        eventBus.emit(APP_EVENTS.TASK_ASSIGNED, { 
+            userId: userId,
+            taskName: task.name,
+        });
+
+        const story = await StoryService.getById(task.storyId);
+        if (story && story.status === "todo") {
+            await StoryService.edit({ ...story, status: "in progress" });
+        }
     }
 
-    /**
-     * POBIERANIE ZADAŃ DLA HISTORYJKI
-     */
-    static getAllByStory(storyId: string): Task[] {
-        const allTasks = this.getRawTasks();
-        const filtered = allTasks.filter(t => t.storyId === storyId);
-        console.log(`Znaleziono ${filtered.length} zadań dla story: ${storyId}`);
-        return filtered;
-    }
+    static async completeTask(taskId: string): Promise<void> {
+        const task = await this.getById(taskId);
+        if (!task) return;
 
-    /**
-     * POBIERANIE JEDNEGO ZADANIA PO ID
-     */
-    static getById(taskId: string): Task | undefined {
-        return this.getRawTasks().find(t => t.id === taskId);
-    }
+        const taskRef = doc(db, this.collectionName, taskId);
+        await updateDoc(taskRef, {
+            status: "done" as const,
+            dateEnd: new Date().toISOString()
+        });
 
-    /**
-     * LOGIKA BIZNESOWA: PRZYPISANIE OSOBY
-     * Automatycznie zmienia stan zadania i historyjki
-     */
-    static assignUser(taskId: string, userId: string): void {
-        const tasks = this.getRawTasks();
-        const index = tasks.findIndex(t => t.id === taskId);
+        const storyTasks = await this.getAllByStory(task.storyId);
+        const allDone = storyTasks.every(t => t.status === "done");
         
-        if (index !== -1) {
-            tasks[index].ownerId = userId;
-            tasks[index].status = "in progress"; 
-            tasks[index].dateStart = new Date().toISOString();
-            
-            this._saveTasks(tasks);
-
-            eventBus.emit(APP_EVENTS.TASK_ASSIGNED, { 
-                    userId: userId,
-                    taskName: tasks[index].name,
-                });
-
-            const story = StoryService.getById(tasks[index].storyId);
-            if (story && story.status === "todo") {
-                story.status = "in progress";
-                StoryService.edit(story);
+        if (allDone) {
+            const story = await StoryService.getById(task.storyId);
+            if (story && story.status !== "done") {
+                await StoryService.edit({ ...story, status: "done" });
             }
         }
     }
 
-    /**
-     * LOGIKA BIZNESOWA: ZAMKNIĘCIE ZADANIA
-     * Sprawdza czy wszystkie zadania w historyjce są DONE
-     */
-    static completeTask(taskId: string): void {
-        const tasks = this.getRawTasks();
-        const index = tasks.findIndex(t => t.id === taskId);
 
-        if (index !== -1) {
-            tasks[index].status = "done";
-            tasks[index].dateEnd = new Date().toISOString();
-            this._saveTasks(tasks);
-
-            // Sprawdzanie statusu historyjki
-            const currentStoryId = tasks[index].storyId;
-            const storyTasks = tasks.filter(t => t.storyId === currentStoryId);
-            const allDone = storyTasks.every(t => t.status === "done");
-            
-            if (allDone) {
-                const story = StoryService.getById(currentStoryId);
-                if (story) {
-                    story.status = "done";
-                    StoryService.edit(story);
-                }
-            }
-        }
-    }
-
-    /**
-     * USUWANIE ZADANIA
-     */
-    static delete(taskId: string): void {
-        const tasks = this.getRawTasks();
-        const updatedTasks = tasks.filter(t => t.id !== taskId);
-        this._saveTasks(updatedTasks);
+    static async delete(taskId: string): Promise<void> {
+        if (!taskId) return;
+        await deleteDoc(doc(db, this.collectionName, taskId));
     }
 }

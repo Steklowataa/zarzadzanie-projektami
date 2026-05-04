@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Header from '../components/projects/Header';
+import Header from '../../components/projects/Header';
 import { User, UserRole as role, DB_CONFIG } from '@/settings';
 import { UserService } from '@/lib/dbService';
 import { db } from "@/firebase";

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { StoryService } from "@/lib/storyServices";
 import { Story } from "@/types/story";
-import BackBtn from "../../../../../components/tasks/BackBtn";
+import BackBtn from "../../../../../../components/tasks/BackBtn";
 
 export default function EditStoryPage() {
   const params = useParams();

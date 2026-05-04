@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { StoryService } from "@/lib/storyServices";
 import { currentUser } from "@/types/mockUpUsers";
-import BackBtn from "../../../../components/tasks/BackBtn";
+import BackBtn from "../../../../../components/tasks/BackBtn";
 
 export default function CreateStoryPage() {
   const { projectId } = useParams() as { projectId: string };

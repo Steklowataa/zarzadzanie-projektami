@@ -1,7 +1,7 @@
 import BackBtn from "./BackBtn"
 import CreateButton from "../CreateButton"
 
-export default function Header({ story, router, projectId, storyId }: { story: any, router: any, projectId: string, storyId: string }) {
+export default function HeaderTask({ story, router, projectId, storyId }: { story: any, router: any, projectId: string, storyId: string }) {
     return (
         <div className="relative z-20 mb-10">
         <BackBtn title="Back to Stories" onClick={() => router.push(`/projects/${projectId}/stories`)}/>

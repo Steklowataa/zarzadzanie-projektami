@@ -7,9 +7,9 @@ import { Task } from "@/types/task";
 import { Story } from "@/types/story";
 import Image from "next/image";
 import { User } from "@/settings"; 
-import TaskCard from "../../../../../components/tasks/TaskCard";
+import TaskCard from "../../../../../../components/tasks/TaskCard";
 import { columns } from "@/types/themes/themes"
-import Header from "../../../../../components/tasks/Header"
+import Header from "../../../../../../components/tasks/HeaderTask"
 
 export default function TaskKanbanPage() {
   const { projectId, storyId } = useParams() as any;
@@ -21,8 +21,9 @@ export default function TaskKanbanPage() {
 
   const [appUsers, setAppUsers] = useState<User[]>([]);
 
-  const refreshTask = () => {
-    setTasks(TaskService.getAllByStory(storyId));
+  const refreshTask = async () => {
+    const stories = await TaskService.getAllByStory(storyId);
+    setTasks(stories);
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Project } from '../../../../types/project'
 import { useActiveProject } from '../../../../lib/useActiveProject'
 import { ProjectService } from '../../../../lib/ProjectService'
-import BackBtn  from '../../../components/tasks/BackBtn'
+import BackBtn  from '../../../../components/tasks/BackBtn'
 
 
 export default function EditProject({ params: paramsPromise }: { params: Promise<{ projectId: string }> }) {
