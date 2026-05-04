@@ -1,9 +1,9 @@
 "use client"
 import { Clock, User as UserIcon, Lightbulb, CheckCircle2 } from "lucide-react";
 import { Task } from "@/types/task";
-import { User } from "@/types/user";
+import { User } from "@/settings";
 import DropdownMenu from "./DropdownMenu"; 
-import { STORY_PRIORITIES, PriorityLevel } from "../../../types/prioritets"
+import { STORY_PRIORITIES, PriorityLevel } from "../../types/prioritets"
 
 interface TaskCardProps {
   task: Task;
@@ -48,17 +48,13 @@ export default function TaskCard({
       </div>
 
       <div className="flex justify-between items-center pt-4 border-t border-white/5">
-        
-        {/* LEWA STRONA: PRZYPISANIE UŻYTKOWNIKA */}
         <div className="relative">
           <div
             onClick={(e) => {
               e.stopPropagation();
-              // Jeśli ten dropdown jest już otwarty, zamknij go. Jeśli nie, otwórz go.
               setDropdown(openDropdown === userDropdownKey ? null : userDropdownKey);
             }}
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition"
-          >
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
             <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center border border-white/5">
               <UserIcon size={12} className={owner ? "text-[#B9FF68]" : "text-gray-400"}/>
             </div>
@@ -66,8 +62,6 @@ export default function TaskCard({
               {owner ? owner.name : "Unassigned"}
             </span>
           </div>
-
-          {/* Renderuj dropdown TYLKO jeśli klucz się zgadza */}
           {openDropdown === userDropdownKey && (
             <DropdownMenu
               setDropdown={setDropdown}
@@ -78,7 +72,6 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* ŚRODEK: STATUS */}
         <div className="relative">
           {task.status === "done" ? (
              <div className="flex flex-col items-center">
@@ -120,7 +113,6 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* PRAWA STRONA: CZAS */}
         <div className="flex items-center gap-1 text-gray-600">
           <Clock size={10} />
           <span className="text-[9px] font-mono">{task.timeofWork}h</span>

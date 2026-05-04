@@ -1,9 +1,9 @@
 import { Story } from "@/types/story";
 import { Lightbulb, PencilLine, Trash2 } from "lucide-react";
-import { STORY_PRIORITIES, PriorityLevel } from "../../../types/prioritets"
+import { STORY_PRIORITIES, PriorityLevel } from "../../types/prioritets"
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { StoryService } from "../../../lib/storyServices";
+import { StoryService } from "../../lib/storyServices";
 import { useRouter} from "next/navigation";
 
 

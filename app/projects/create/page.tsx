@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { ProjectService } from "@/lib/ProjectService";
 import { currentUser } from "@/types/mockUpUsers";
-import BackBtn from "../../../app/components/tasks/BackBtn";
+import BackBtn from "../../../components/tasks/BackBtn";
 
 export default function CreateProjectPage() {
     const router = useRouter();

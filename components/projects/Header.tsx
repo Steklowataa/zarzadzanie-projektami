@@ -1,8 +1,8 @@
 'use client';
 
 import Link from "next/link"
-import MessageView from "../../components/messages/MessageView"
-import { useNotifications } from "../../../app/context/NotificationContext"
+import MessageView from "../messages/MessageView"
+import { useNotifications } from "../../app/context/NotificationContext"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 

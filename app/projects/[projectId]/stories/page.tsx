@@ -1,16 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import CreateButton from "../../../components/CreateButton";
+import CreateButton from "../../../../components/CreateButton";
 import { Story } from "@/types/story";
 import { StoryService } from "@/lib/storyServices"; 
 import { ProjectService } from "../../../../lib/ProjectService";
-import { StatusTabs } from "../../../components/stories/StatusBar";
-import { StoryCard } from "../../../components/stories/StoryCard";
+import { StatusTabs } from "../../../../components/stories/StatusBar";
+import { StoryCard } from "../../../../components/stories/StoryCard";
 import Image from "next/image";
 import { Project } from "../../../../types/project";
 import { theme } from "@/types/themes/themes";
-import BackBtn from "../../../components/tasks/BackBtn";
+import BackBtn from "../../../../components/tasks/BackBtn";
 
 export default function StoriesPage() {
   const { projectId } = useParams() as { projectId: string };

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { Project } from "../../types/project"
 import { useActiveProject } from "../../lib/useActiveProject"
 import { currentUser } from "../../types/mockUpUsers"
-import ProjectFilter from "../components/projects/ProjectFilter"
-import Header from "../components/projects/Header"
+import ProjectFilter from "../../components/projects/ProjectFilter"
+import Header from "../../components/projects/Header"
 import { ProjectService } from "../../lib/ProjectService"
 
 
