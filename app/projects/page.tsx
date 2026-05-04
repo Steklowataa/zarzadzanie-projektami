@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Project } from "../../types/project"
@@ -7,26 +7,31 @@ import { useActiveProject } from "../../lib/useActiveProject"
 import { currentUser } from "../../types/mockUpUsers"
 import ProjectFilter from "../components/projects/ProjectFilter"
 import Header from "../components/projects/Header"
+import { ProjectService } from "../../lib/ProjectService"
 
 
 export default function ProjectPage() {
     const router = useRouter()
     const [showAll, setShowAll] = useState(false) 
     
-    const [projects, setProjects] = useState<Project[]>(() => {
-        if (typeof window !== "undefined") {
-            return JSON.parse(localStorage.getItem("projects") || "[]")
-        }
-        return []
-    })
+    const [projects, setProjects] = useState<Project[]>([])
+
 
     const { activeProjectId } = useActiveProject()
 
-    const deleteProject = (id: string) => {
-        const update = projects.filter(project => project.id !== id)
-        setProjects(update)
-        localStorage.setItem("projects", JSON.stringify(update))
-    }
+    const refreshProjects = async () => {
+        const data = await ProjectService.getAll()
+        setProjects(data)
+    };
+
+    useEffect(() => {
+        refreshProjects();
+    }, []);
+
+    const deleteProject = async (id: string) => {
+        await ProjectService.delete(id);
+        refreshProjects();
+    };
 
     const displayedProjects = showAll 
         ? projects 
@@ -46,8 +51,7 @@ export default function ProjectPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedProjects.map(project => (
-                    <div 
-                        key={project.id}
+                    <div key={project.id || `project-${project.name}}`}
                         className={`p-6 rounded-3xl border transition-all ${project.id === activeProjectId ? 'bg-white/10 border-[#B9FF68]' : 'bg-white/5 border-white/10'}`}>
                         <div className="flex justify-between items-start mb-4">
                             <h2 className="text-xl font-bold uppercase tracking-tight">{project.name}</h2>

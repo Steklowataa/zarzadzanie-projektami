@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { TaskService } from "@/lib/taskService";
@@ -6,7 +6,7 @@ import { StoryService } from "@/lib/storyServices";
 import { Task } from "@/types/task";
 import { Story } from "@/types/story";
 import Image from "next/image";
-import { users } from "@/types/mockUpUsers";
+import { User } from "@/settings"; 
 import TaskCard from "../../../../../components/tasks/TaskCard";
 import { columns } from "@/types/themes/themes"
 import Header from "../../../../../components/tasks/Header"
@@ -17,10 +17,21 @@ export default function TaskKanbanPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [story, setStory] = useState<Story | undefined>(undefined);
   const [openDropdown, setDropdown] = useState<string | null>(null);
+  
+
+  const [appUsers, setAppUsers] = useState<User[]>([]);
 
   const refreshTask = () => {
     setTasks(TaskService.getAllByStory(storyId));
   };
+
+  useEffect(() => {
+    refreshTask();
+    setStory(StoryService.getById(storyId));
+    const savedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+    const filtredUser = savedUsers.filter(u => u.role === 'developer' || u.role === 'devops');
+    setAppUsers(filtredUser);
+  }, [storyId]);
 
   //dropdown dla status
   const handleComplete = (e: React.MouseEvent, taskId: string) => {
@@ -38,27 +49,17 @@ export default function TaskKanbanPage() {
     refreshTask(); 
   };
 
-  useEffect(() => {
-    refreshTask();
-    setStory(StoryService.getById(storyId));
-  }, [storyId]);
-
-
-
   return (
     <div className="relative p-12 min-h-screen text-white">
       <div className="fixed inset-0 z-[-1] bg-[#0a0a0a]">
         <Image alt="bg" fill src="/images/bg-kanban.png" className="object-cover opacity-40" priority />
       </div>
 
-      {/* Header */}
       <Header router={router} story={story} projectId={projectId} storyId={storyId} />
 
-      {/* Kanban Board Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
         {columns.map(col => (
           <div key={col.id} className="flex flex-col h-full">
-            {/* Column Header */}
             <div className="flex items-center gap-3 mb-6 px-2">
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: col.color }} />
               <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-400 uppercase">
@@ -66,11 +67,11 @@ export default function TaskKanbanPage() {
               </h2>
             </div>
 
-            {/* Column Content */}
             <div className="flex-grow rounded-[32px] p-4 min-h-[600px] bg-white/5 border border-white/10 backdrop-blur-md">
               <div className="space-y-4">
                 {tasks.filter(t => t.status === col.id).map(task => {
-                  const owner = users.find(u => u.id === task.ownerId);
+                  // ZMIANA: Szukamy właściciela w appUsers zamiast w mockupach
+                  const owner = appUsers.find(u => u.id === task.ownerId);
 
                   return (
                     <div 
@@ -82,7 +83,7 @@ export default function TaskKanbanPage() {
                         owner={owner} 
                         openDropdown={openDropdown} 
                         setDropdown={setDropdown}
-                        users={users}
+                        users={appUsers}
                         handleAssignUser={handleAssignUser}
                         handleComplete={handleComplete} />
                     </div>

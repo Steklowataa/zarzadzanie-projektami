@@ -37,23 +37,20 @@ export default function Header() {
                 {canSeeUser && (
                     <Link 
                         href="/users" 
-                        className={`text-sm transition-colors hover:text-blue-400 ${pathname === '/users' ? 'text-blue-400 font-bold' : 'text-white'}`}
-                    >
+                        className={`text-[16px] transition-colors hover:text-blue-400 ${pathname === '/users' ? 'text-blue-400 font-bold' : 'text-white'}`}>
                         Użytkownicy
                     </Link>
                 )}
 
                 <Link 
                     href="/projects/create" 
-                    className="bg-[#B9FF68] px-6 py-2 rounded-full text-black font-bold uppercase text-xs hover:scale-105 transition-transform"
-                >
+                    className="bg-[#B9FF68] px-6 py-2 rounded-full text-black font-bold uppercase text-xs hover:scale-105 transition-transform">
                      + Create Project
                 </Link>
 
                 <button 
                     onClick={() => { sessionStorage.clear(); window.location.href = '/'; }}
-                    className="text-xs uppercase tracking-wider text-red-500 hover:text-red-400 font-bold border border-red-500/20 px-3 py-2 rounded-lg transition-colors"
-                >
+                    className="text-xs uppercase cursor-pointer hover:scale-105 tracking-wider text-red-400 font-bold border border-red-500/20 bg-red-500/40 px-3 py-2 rounded-[20px] ">
                     Wyloguj
                 </button>
             </div>

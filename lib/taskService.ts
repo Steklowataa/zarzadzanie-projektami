@@ -5,10 +5,7 @@ import {APP_EVENTS, eventBus } from "@/utils/eventBus";
 export class TaskService {
     private static STORAGE_KEY = "tasks";
 
-    /**
-     * POBIERANIE SUROWYCH DANYCH
-     * Bezpieczna metoda wywoływana wewnętrznie
-     */
+
     private static getRawTasks(): Task[] {
         if (typeof window === "undefined") return [];
         const data = localStorage.getItem(this.STORAGE_KEY);
