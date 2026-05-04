@@ -1,40 +1,85 @@
+import { db } from "../firebase";
+import { 
+    collection, 
+    getDocs, 
+    getDoc, 
+    doc, 
+    setDoc, 
+    deleteDoc, 
+    updateDoc, 
+    query, 
+    where 
+} from "firebase/firestore";
 import { Story } from "../types/story";
 
 export class StoryService {
-    private static STORAGE_KEY = "stories";
-
-    static getAllByProject(projectId: string): Story[] {
-        const stories: Story[] = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
-        return stories.filter(s => s.projectId === projectId);
+    private static collectionName = "stories";
+    static async getAllByProject(projectId: string): Promise<Story[]> {
+        try {
+            const q = query(
+                collection(db, this.collectionName), 
+                where("projectId", "==", projectId)
+            );
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id
+            } as Story));
+        } catch (e) {
+            console.error("Błąd pobierania stories:", e);
+            return [];
+        }
     }
 
-    static getById(id: string): Story | undefined {
-        const stories: Story[] = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
-        return stories.find(s => s.id === id);
-    }
-
-
-    static create(story: Story): void {
-        const stories = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
-        stories.push(story);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(stories));
-    }
-
-    static edit(updatedStory: Story): void {
-        const stories = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
-        const newStories = stories.map((story: Story) => {
-            if (story.id === updatedStory.id) {
-                return updatedStory;
+    static async getById(id: string): Promise<Story | undefined> {
+        if (!id) return undefined;
+        try {
+            const docRef = doc(db, this.collectionName, id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                return {
+                    ...docSnap.data(),
+                    id: docSnap.id
+                } as Story;
             }
-            return story;
-        });
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newStories));
-
+        } catch (e) {
+            console.error("Błąd pobierania story by id:", e);
+        }
+        return undefined;
     }
 
-    static delete(storyId: string): void {
-        const stories = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
-        const newStories = stories.filter((story: Story) => story.id !== storyId);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newStories));
+    static async create(story: Story): Promise<void> {
+        try {
+            await setDoc(doc(db, this.collectionName, story.id), story);
+        } catch (e) {
+            console.error("Błąd tworzenia story:", e);
+            throw e;
+        }
+    }
+
+    static async edit(updatedStory: Story): Promise<void> {
+        try {
+            const docRef = doc(db, this.collectionName, updatedStory.id);
+            await updateDoc(docRef, {
+                name: updatedStory.name,
+                description: updatedStory.description,
+                status: updatedStory.status,
+                priority: updatedStory.priority,
+            });
+        } catch (e) {
+            console.error("Błąd edycji story:", e);
+            throw e;
+        }
+    }
+
+    static async delete(storyId: string): Promise<void> {
+        if (!storyId) return;
+        try {
+            await deleteDoc(doc(db, this.collectionName, storyId));
+        } catch (e) {
+            console.error("Błąd usuwania story:", e);
+            throw e;
+        }
     }
 }

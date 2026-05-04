@@ -18,16 +18,19 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
   const router = useRouter()
   const { projectId } = useParams()
 
-  const handleFelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
     e.preventDefault()
     if(confirm("Are you sure you want to delete this story?")) {
-      StoryService.delete(story.id)
+      await StoryService.delete(story.id)
       router.refresh()
       window.location.reload()
     }
   }
 
-  //przejscie do taskow
+  const handleEdit = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
   const handleClick = () => {
     router.push(`/projects/${projectId}/stories/${story.id}/tasks`)
   }
@@ -41,10 +44,10 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-xl font-bold text-white">{story.name}</h3>
           <div className="flex gap-4">
-            <Link href={`/projects/${projectId}/stories/${story.id}/edit`}>
+            <Link onClick={handleEdit} href={`/projects/${projectId}/stories/${story.id}/edit`}>
               <PencilLine size={18} />
             </Link>
-            <button onClick={handleFelete} className="cursor-pointer">
+            <button onClick={handleDelete} className="cursor-pointer">
               <Trash2 size={18} />
             </button>
           </div>
