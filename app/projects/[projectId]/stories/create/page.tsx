@@ -6,6 +6,7 @@ import { Story } from "@/types/story"
 import { StoryService } from "@/lib/storyServices"
 import { User } from "@/types/user" 
 
+
 export default function CreateStoryPage() {
     const params = useParams()
     const router = useRouter()
@@ -41,7 +42,6 @@ export default function CreateStoryPage() {
 
     return (
         <div className="max-w-2xl mx-auto p-8 text-white">
-            {/* Informacja o autorze (opcjonalnie, dla debugowania) */}
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest">
                 Creating as: <span className="text-[#B9FF68]">{mockUser.name}</span>
             </p>

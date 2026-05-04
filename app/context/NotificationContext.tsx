@@ -1,9 +1,7 @@
 "use client"
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Message } from '@/types/messages';
-import { currentUser } from "../../types/mockUpUsers"
-import { eventBus,  } from '@/utils/eventBus';
-
+import { eventBus, APP_EVENTS } from '@/utils/eventBus';
 
 interface NotificationContextType {
     notifications: Message[]; 
@@ -14,61 +12,60 @@ interface NotificationContextType {
     setActiveMessage: (msg: Message | null) => void;
 }
 
-const MOCK_DATA: Message[] = [
-    {
-        id: "1",
-        title: "Nowy projekt",
-        message: "Admin utworzył nowy projekt: 'Księżycowa Misja'.",
-        date: "2026-04-10 12:00",
-        priority: 'high',
-        isRead: false,
-        recipientId: "1"
-    },
-    {
-        id: "2",
-        title: "Zadanie przypisane",
-        message: "Zostałeś przypisany do zadania: 'Naprawa silnika'.",
-        date: "2026-04-10 14:30",
-        priority: 'medium',
-        isRead: false,
-        recipientId: "2"
-    }
-];
-
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-    const [messages, setMessages] = useState<Message[]>(MOCK_DATA);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [activeMessage, setActiveMessage] = useState<Message | null>(null);
-    const [toast, setToast] = useState<Message | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        const savedNotifications = localStorage.getItem('app_notifications');
+        if (savedNotifications) {
+            setMessages(JSON.parse(savedNotifications));
+        }
+
+        const role = sessionStorage.getItem('user_role');
+        const id = sessionStorage.getItem('user_id'); 
+        
+        setCurrentUserId(id);
+        setCurrentUserRole(role);
+    }, []);
+
+
+    useEffect(() => {
+        if (messages.length > 0 || localStorage.getItem('app_notifications')) {
+            localStorage.setItem('app_notifications', JSON.stringify(messages));
+        }
+    }, [messages]);
 
 
     const userNotifications = messages.filter(n => {
-        const isDirectRecipient = n.recipientId === currentUser.id;
-        const isAdminNotification = n.recipientId === 'admin' && currentUser.role === 'admin';
+        if (!currentUserId || !currentUserRole) return false;
+
+
+        const isDirectRecipient = n.recipientId === currentUserId;
+        
+
+        const isAdminNotification = 
+            (n.recipientId === 'admin') && 
+            (currentUserRole === 'admin' || currentUserRole === 'super-admin');
+
         return isDirectRecipient || isAdminNotification;
     });
 
     const unreadCount = userNotifications.filter(n => !n.isRead).length;
 
-    const viewMessage = (msg: Message) => {
-        setActiveMessage(msg);
-        if (!msg.isRead) {
-            markAsRead(msg.id);
-        }
-    };
-
-
-    const addNotification = (msg: Omit<Message, 'id' | 'isRead' | 'date'>) => {
-    const newMsg = { ...msg, id: crypto.randomUUID(), isRead: false, date: new Date().toLocaleString() };
-    setMessages(prev => [newMsg, ...prev]);
-
-
-    if (msg.priority === 'high' || msg.priority === 'medium') {
-        setToast(newMsg);
-        setTimeout(() => setToast(null), 5000);
-    }
-};
+    const addNotification = useCallback((msg: Omit<Message, 'id' | 'isRead' | 'date'>) => {
+        const newMsg: Message = { 
+            ...msg, 
+            id: crypto.randomUUID(), 
+            isRead: false, 
+            date: new Date().toLocaleString() 
+        };
+        setMessages(prev => [newMsg, ...prev]);
+    }, []);
 
     const markAsRead = (id: string) => {
         setMessages(prev =>
@@ -78,42 +75,41 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
 
-    const handleTaskAssigned = (data: { userId: string, taskName: string }) => {
+        const handleUserRegistered = (data: any) => {
+            addNotification({
+                title: "Nowy użytkownik w systemie",
+                message: data.message,
+                priority: 'high',
+                recipientId: 'admin'
+            });
+        };
+
+
+        const handleTaskAssigned = (data: { userId: string, taskName: string }) => {
             addNotification({
                 title: "Nowe zadanie!",
                 message: `Zostałeś przypisany do zadania: ${data.taskName}`,
-                priority: 'high', // Zgodnie z zadaniem: przypisanie = high
-                recipientId: data.userId
+                priority: 'high',
+                recipientId: data.userId 
             });
         };
-    eventBus.on('TASK_ASSIGNED', handleTaskAssigned);
 
 
+        const handleStatusChange = (data: { taskName: string, newStatus: string, ownerId: string }) => {
+            addNotification({
+                title: "Zmiana statusu",
+                message: `Zadanie ${data.taskName} jest teraz: ${data.newStatus}`,
+                priority: 'low',
+                recipientId: data.ownerId
+            });
+        };
 
-    // Reakcja na zmianę statusu
-    eventBus.on('TASK_STATUS_CHANGED', (data) => {
-        const priority = data.newStatus === 'done' ? 'medium' : 'low';
-        addNotification({
-            title: "Zmiana statusu",
-            message: `Zadanie ${data.taskName} zmieniło status na ${data.newStatus}`,
-            priority: priority,
-            recipientId: data.ownerId
-        });
-    });
+        eventBus.on(APP_EVENTS.USER_REGISTERED, handleUserRegistered);
+        eventBus.on(APP_EVENTS.TASK_ASSIGNED, handleTaskAssigned);
+        eventBus.on(APP_EVENTS.TASK_STATUS_CHANGED, handleStatusChange);
 
-    //reackaj na stworzenie nowego zadania
-    const handleTaskCreated = (data: { ownerId: string, taskName: string, storyName: string }) => {
-        addNotification({
-            title: "Nowe zadanie w historyjce",
-            message: `Do Twojej historyjki "${data.storyName}" dodano nowe zadanie: ${data.taskName}`,
-            priority: 'medium',
-            recipientId: data.ownerId 
-        });
-    };
-    eventBus.on('TASK_CREATED', handleTaskCreated);
-
-}, [addNotification]);
-
+        // Opcjonalnie: Cleanup
+    }, [addNotification]);
 
     return (
         <NotificationContext.Provider value={{ 

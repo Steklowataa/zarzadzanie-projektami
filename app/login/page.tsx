@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { getRoleByEmail } from '@/settings';
+import {eventBus, APP_EVENTS } from "@/utils/eventBus"
+import {UserService} from "@/lib/dbService"
 
 
 export default function LoginPage() {
@@ -29,16 +31,12 @@ export default function LoginPage() {
   };
 
 
-  // Wewnątrz handleCallbackResponse w LoginPage.tsx
-
-const handleCallbackResponse = (response: any) => {
+const handleCallbackResponse = async (response: any) => {
   try {
     const payload = parseJwt(response.credential);
     if (!payload || !payload.email) throw new Error('Błąd danych');
 
-    const storedUsersRaw = localStorage.getItem('app_users');
-    const users = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
-    let currentUser = users.find((u: any) => u.email === payload.email);
+    let currentUser = await UserService.getUser(payload.sub);
 
     if (!currentUser) {
       const initialRole = getRoleByEmail(payload.email);
@@ -49,15 +47,22 @@ const handleCallbackResponse = (response: any) => {
         avatar: payload.picture,
         role: initialRole,
       };
-      users.push(currentUser);
-      localStorage.setItem('app_users', JSON.stringify(users));
+
+      await UserService.saveUser(currentUser)
+    
+      eventBus.emit(APP_EVENTS.USER_REGISTERED, {
+        title: "Nowy uzytkownik w systemie",
+        message: `Uzytkonwik ${currentUser.name} ${currentUser.email} zarejestrowany`,
+        priority: "high",
+        userId: currentUser.id,
+      })
     }
 
     sessionStorage.setItem('gsi_credential', response.credential);
     sessionStorage.setItem('user_role', currentUser.role);
     sessionStorage.setItem('user_name', currentUser.name);
+    sessionStorage.setItem('user_id', currentUser.id);
 
-    // Jeśli konto jest zablokowane
     if (currentUser.role === 'blocked') {
       setError('Twoje konto jest zablokowane.');
     return;
@@ -66,7 +71,6 @@ const handleCallbackResponse = (response: any) => {
   if (currentUser.role === 'guest') {
     router.push('/login/authorisation');
   } else {
-  // Tutaj wpadnie: admin, super-admin, developer, devops
   router.push('/projects');
 }
   } catch (err) {
@@ -74,32 +78,36 @@ const handleCallbackResponse = (response: any) => {
   }
 };
 
-  const onGoogleScriptLoad = () => {
-    if (typeof window !== 'undefined' && (window as any).google) {
-      const google = (window as any).google;
-      
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCallbackResponse,
-        auto_select: false,
-      });
+const renderGoogleButton = () => {
+  if (typeof window !== 'undefined' && (window as any).google) {
+    const google = (window as any).google;
+    
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCallbackResponse,
+      auto_select: false,
+    });
 
-      google.accounts.id.renderButton(
-        document.getElementById('googleSignInBtn'),
-        { 
-          theme: 'outline', 
-          size: 'large', 
-          width: '300',
-          text: 'signin_with',
-          shape: 'rectangular' 
-        }
-      );
-      
+    const btnElement = document.getElementById('googleSignInBtn');
+    if (btnElement) {
+      google.accounts.id.renderButton(btnElement, { 
+        theme: 'outline', 
+        size: 'large', 
+        width: '300',
+        text: 'signin_with',
+        shape: 'rectangular' 
+      });
       setLoading(false);
     }
-  };
+  }
+};
+  useEffect(() => {
+    if ((window as any).google) {
+      renderGoogleButton();
+    }
+}, [loading]); 
 
-  // Sprawdzenie, czy użytkownik ma już aktywną sesję przy wejściu na stronę
+
   useEffect(() => {
     const storedToken = sessionStorage.getItem('gsi_credential');
     const storedRole = sessionStorage.getItem('user_role');
@@ -127,7 +135,7 @@ const handleCallbackResponse = (response: any) => {
       {/* Skrypt Google załadowany bezpiecznie przez Next.js */}
       <Script 
         src="https://accounts.google.com/gsi/client" 
-        onLoad={onGoogleScriptLoad}
+        onLoad={renderGoogleButton}
         strategy="afterInteractive"
       />
 

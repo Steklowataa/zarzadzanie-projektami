@@ -6,9 +6,6 @@ import { useRouter } from 'next/navigation';
 export default function AuthorisationPage() {
   const router = useRouter();
 
-  // Opcjonalnie: jeśli admin zmieni rolę w locie, a użytkownik odświeży stronę
-  // można tu dodać sprawdzenie, czy nadal jest GUEST-em.
-
   return (
     <div className="fixed inset-0 z-[9999] bg-gray-200 flex flex-col items-center justify-center cursor-not-allowed">
       <div className="bg-white p-8 rounded-lg shadow-md text-center">
@@ -20,10 +17,9 @@ export default function AuthorisationPage() {
         <button 
           onClick={() => {
             sessionStorage.clear();
-            router.push('/'); // Powrót do logowania (wylogowanie)
+            router.push('/');
           }}
-          className="mt-6 text-sm text-blue-600 hover:underline"
-        >
+          className="mt-6 text-sm text-blue-600 hover:underline">
           Zaloguj się na inne konto
         </button>
       </div>
