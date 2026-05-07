@@ -4,53 +4,43 @@ import Link from "next/link"
 import MessageView from "../messages/MessageView"
 import { useNotifications } from "../../app/context/NotificationContext"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { auth } from "@/firebase";
 
 export default function Header() {
-    const { unreadCount } = useNotifications()
+    const { unreadCount, user } = useNotifications()
     const pathname = usePathname()
-    const [role, setRole] = useState<string | null>(null)
-    const [name, setName] = useState<string | null>(null)
+    
+    const canSeeUser = user?.role === 'admin' || user?.role === 'super-admin'
 
-    useEffect(() => {
-        const currentUser = sessionStorage.getItem('user_role')
-        setRole(currentUser)
-        const currentName = sessionStorage.getItem('user_name')
-        setName(currentName)
-    }, [])
-
-    const canSeeUser = role === "super-admin" || role === "admin"
+    const handleLogout = async () => {
+        await auth.signOut();
+        sessionStorage.clear();
+        window.location.href = '/login';
+    }
 
     return (
         <header className="flex w-full items-center justify-end gap-x-6 bg-white/30 p-3 backdrop-blur-sm">
-            {/* Sekcja wiadomości i nazwy użytkownika w jednej linii */}
             <Link href="/messages" className="flex items-center gap-x-3 hover:opacity-80 transition-opacity">
                 <div className="relative">
                     <MessageView counter={unreadCount} visibility={unreadCount > 0}/>
                 </div>
                 <span className="text-white font-medium whitespace-nowrap">
-                    {name || role || "Użytkownik"}
+                    {user?.name || "Ładowanie..."}
                 </span>
             </Link>
 
             <div className="flex items-center gap-x-4">
                 {canSeeUser && (
-                    <Link 
-                        href="/users" 
-                        className={`text-[16px] transition-colors hover:text-blue-400 ${pathname === '/users' ? 'text-blue-400 font-bold' : 'text-white'}`}>
+                    <Link href="/users" className={`text-[16px] transition-colors hover:text-blue-400 ${pathname === '/users' ? 'text-blue-400 font-bold' : 'text-white'}`}>
                         Użytkownicy
                     </Link>
                 )}
-
-                <Link 
-                    href="/projects/create" 
-                    className="bg-[#B9FF68] px-6 py-2 rounded-full text-black font-bold uppercase text-xs hover:scale-105 transition-transform">
+                <Link href="/projects/create" className="bg-[#B9FF68] px-6 py-2 rounded-full text-black font-bold uppercase text-xs hover:scale-105 transition-transform">
                      + Create Project
                 </Link>
-
                 <button 
-                    onClick={() => { sessionStorage.clear(); window.location.href = '/'; }}
-                    className="text-xs uppercase cursor-pointer hover:scale-105 tracking-wider text-red-400 font-bold border border-red-500/20 bg-red-500/40 px-3 py-2 rounded-[20px] ">
+                    onClick={handleLogout}
+                    className="text-xs uppercase hover:scale-105 text-red-400 font-bold border border-red-500/20 bg-red-500/40 px-3 py-2 rounded-[20px] ">
                     Wyloguj
                 </button>
             </div>

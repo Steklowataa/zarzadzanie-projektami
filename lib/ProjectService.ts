@@ -6,9 +6,11 @@ import {
     doc, 
     setDoc, 
     deleteDoc, 
-    updateDoc 
+    updateDoc, addDoc 
 } from "firebase/firestore";
 import { Project } from "../types/project";
+import { eventBus, APP_EVENTS } from "@/utils/eventBus";
+
 
 export class ProjectService {
     private static collectionName = "projects";
@@ -36,6 +38,16 @@ export class ProjectService {
     static async create(project: Project): Promise<void> {
         try {
             await setDoc(doc(db, this.collectionName, project.id), project);
+
+            await addDoc(collection(db, "notifications"), {
+                title: "Utworzono nowy projekt",
+                message: `Projekt ${project.name} został utworzony.`,
+                date: new Date().toISOString(),
+                priority: "high",
+                isRead: false,
+                recipientId: 'admin'
+            })
+            console.log("Project zostaw utworzony i musi byc wyslalna wiadomosc")
         } catch (e) {
             console.error("Błąd zapisu w Firebase:", e);
         }
