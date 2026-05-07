@@ -1,124 +1,126 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { auth, db } from '@/firebase'; 
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { NotificationService } from '@/lib/notificationService';
 import { Message } from '@/types/messages';
-import { eventBus, APP_EVENTS } from '@/utils/eventBus';
+import { usePathname, useRouter } from 'next/navigation';
+
+// Typy
+interface User { 
+    id: string; 
+    role: string; 
+    name: string; 
+}
 
 interface NotificationContextType {
     notifications: Message[]; 
-    addNotification: (msg: Omit<Message, 'id' | 'isRead' | 'date'>) => void;
-    markAsRead: (id: string) => void;
     unreadCount: number;
+    user: User | null;
+    loading: boolean;
     activeMessage: Message | null;
     setActiveMessage: (msg: Message | null) => void;
+    markAsRead: (id: string) => void;
+    addNotification: (msg: Omit<Message, 'id' | 'isRead' | 'date'>) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     const [activeMessage, setActiveMessage] = useState<Message | null>(null);
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+
+    const pathname = usePathname();
+    const router = useRouter();
+    const isLoginPage = pathname === '/login';
 
     useEffect(() => {
-        const savedNotifications = localStorage.getItem('app_notifications');
-        if (savedNotifications) {
-            setMessages(JSON.parse(savedNotifications));
-        }
+        const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
+            if (fbUser) {
+                const userSnap = await getDoc(doc(db, "users", fbUser.uid));
 
-        const role = sessionStorage.getItem('user_role');
-        const id = sessionStorage.getItem('user_id'); 
-        
-        setCurrentUserId(id);
-        setCurrentUserRole(role);
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    setUser({
+                        id: fbUser.uid,
+                        role: data.role || 'guest',
+                        name: data.name || "Użytkownik"
+                    });
+                } else {
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+
+            setLoading(false);
+        });
+
+        return () => unsubscribeAuth();
     }, []);
 
 
     useEffect(() => {
-        if (messages.length > 0 || localStorage.getItem('app_notifications')) {
-            localStorage.setItem('app_notifications', JSON.stringify(messages));
+        if (loading) return;
+
+        if (!user && !isLoginPage) {
+            router.push('/login');
         }
-    }, [messages]);
 
+        if (user && isLoginPage) {
+            router.push('/projects');
+        }
 
-    const userNotifications = messages.filter(n => {
-        if (!currentUserId || !currentUserRole) return false;
+    }, [user, loading, pathname, router]);
 
+    // 🔔 NOTIFICATIONS
+    useEffect(() => {
+        if (loading || !user || user.role === 'blocked') return;
 
-        const isDirectRecipient = n.recipientId === currentUserId;
-        
-
-        const isAdminNotification = 
-            (n.recipientId === 'admin') && 
-            (currentUserRole === 'admin' || currentUserRole === 'super-admin');
-
-        return isDirectRecipient || isAdminNotification;
-    });
-
-    const unreadCount = userNotifications.filter(n => !n.isRead).length;
-
-    const addNotification = useCallback((msg: Omit<Message, 'id' | 'isRead' | 'date'>) => {
-        const newMsg: Message = { 
-            ...msg, 
-            id: crypto.randomUUID(), 
-            isRead: false, 
-            date: new Date().toLocaleString() 
-        };
-        setMessages(prev => [newMsg, ...prev]);
-    }, []);
-
-    const markAsRead = (id: string) => {
-        setMessages(prev =>
-            prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+        const unsubscribe = NotificationService.subscribeToUserNotifications(
+            user.id,
+            user.role,
+            (newMessages) => {
+                setMessages(newMessages);
+            }
         );
+
+        return () => unsubscribe();
+    }, [user, loading]);
+
+    const markAsRead = async (id: string) => {
+        try {
+            await NotificationService.markAsRead(id);
+        } catch (error) {
+            console.error("Błąd przy oznaczaniu powiadomienia:", error);
+        }
     };
 
-    useEffect(() => {
-
-        const handleUserRegistered = (data: any) => {
-            addNotification({
-                title: "Nowy użytkownik w systemie",
-                message: data.message,
-                priority: 'high',
-                recipientId: 'admin'
+    const addNotification = useCallback(async (msg: Omit<Message, 'id' | 'isRead' | 'date'>) => {
+        try {
+            await NotificationService.create({
+                ...msg,
+                isRead: false,
+                date: new Date().toISOString()
             });
-        };
-
-
-        const handleTaskAssigned = (data: { userId: string, taskName: string }) => {
-            addNotification({
-                title: "Nowe zadanie!",
-                message: `Zostałeś przypisany do zadania: ${data.taskName}`,
-                priority: 'high',
-                recipientId: data.userId 
-            });
-        };
-
-
-        const handleStatusChange = (data: { taskName: string, newStatus: string, ownerId: string }) => {
-            addNotification({
-                title: "Zmiana statusu",
-                message: `Zadanie ${data.taskName} jest teraz: ${data.newStatus}`,
-                priority: 'low',
-                recipientId: data.ownerId
-            });
-        };
-
-        eventBus.on(APP_EVENTS.USER_REGISTERED, handleUserRegistered);
-        eventBus.on(APP_EVENTS.TASK_ASSIGNED, handleTaskAssigned);
-        eventBus.on(APP_EVENTS.TASK_STATUS_CHANGED, handleStatusChange);
-
-        // Opcjonalnie: Cleanup
-    }, [addNotification]);
+        } catch (error) {
+            console.error("Błąd przy dodawaniu powiadomienia:", error);
+        }
+    }, []);
 
     return (
         <NotificationContext.Provider value={{ 
-            notifications: userNotifications, 
-            addNotification, 
-            markAsRead, 
-            unreadCount,
+            notifications: messages, 
+            unreadCount: messages.filter(m => !m.isRead).length,
+            user,
+            loading,
             activeMessage,
             setActiveMessage,
+            markAsRead,
+            addNotification
         }}>
             {children}
         </NotificationContext.Provider>
@@ -127,8 +129,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 export function useNotifications() {
     const context = useContext(NotificationContext);
-    if (context === undefined) {
-        throw new Error('useNotifications must be used within a NotificationProvider');
+    if (!context) {
+        throw new Error("useNotifications must be used within a NotificationProvider");
     }
     return context;
 }
