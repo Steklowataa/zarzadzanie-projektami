@@ -44,7 +44,6 @@ export default function CreateTaskPage() {
     try {
       await TaskService.create(newTask);
       router.push(`/projects/${projectId}/stories/${storyId}/tasks`);
-      router.refresh();
     } catch (error) {
       console.error("Error creating task:", error);
     } finally {
@@ -92,7 +91,6 @@ export default function CreateTaskPage() {
             </select>
           </div>
 
-          {/* Time of Work */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
               Est. Hours
@@ -108,8 +106,6 @@ export default function CreateTaskPage() {
             />
           </div>
         </div>
-
-        {/* Description */}
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
             Description
@@ -127,8 +123,7 @@ export default function CreateTaskPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+          className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
           {isSubmitting ? "Launching..." : "Create Task"}
         </button>
       </form>

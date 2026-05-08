@@ -19,7 +19,7 @@ export default function Header() {
     }
 
     return (
-        <header className="flex w-full items-center justify-end gap-x-6 bg-white/30 p-3 backdrop-blur-sm">
+        <header className="flex items-center mx-[30px] justify-end gap-x-6 border-white/30 border-2 border-dotted bg-white/10 p-3 backdrop-blur-sm rounded-2xl mt-2">
             <Link href="/messages" className="flex items-center gap-x-3 hover:opacity-80 transition-opacity">
                 <div className="relative">
                     <MessageView counter={unreadCount} visibility={unreadCount > 0}/>

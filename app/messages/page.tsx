@@ -17,8 +17,7 @@ export default function MessagesPage() {
                         }}
                         className={`p-4 cursor-pointer border-b transition-colors ${
                             activeMessage?.id === msg.id ? 'bg-[#B1FF58]/10' : 'hover:bg-gray-50'
-                        }`}
-                    >
+                        }`}>
                         <div className="flex items-center gap-2">
                             {!msg.isRead && <div className="w-2 h-2 bg-[#B1FF58] rounded-full" />}
                             <span className={`text-sm ${!msg.isRead ? 'font-bold' : 'text-gray-500'}`}>{msg.title}</span>
@@ -33,9 +32,9 @@ export default function MessagesPage() {
                     <div>
                         <div className="flex justify-between items-start mb-6">
                             <h1 className="text-2xl font-bold">{activeMessage.title}</h1>
-                            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-gray-100">
+                            {/* <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-gray-100">
                                 Priority: {activeMessage.priority}
-                            </span>
+                            </span> */}
                         </div>
                         <p className="text-gray-600 leading-relaxed mb-4">{activeMessage.message}</p>
                         <p className="text-xs text-gray-400">Data otrzymania: {activeMessage.date}</p>

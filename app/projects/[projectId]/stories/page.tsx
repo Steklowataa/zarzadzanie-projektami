@@ -12,6 +12,15 @@ import { Project } from "../../../../types/project";
 import { theme } from "@/types/themes/themes";
 import BackBtn from "../../../../components/tasks/BackBtn";
 
+const StorySkeleton = () => (
+  <div className="bg-white/5 border border-white/10 rounded-3xl h-48 w-full animate-pulse flex flex-col p-6 space-y-4">
+    <div className="h-6 bg-white/10 rounded w-3/4"></div>
+    <div className="h-4 bg-white/5 rounded w-full"></div>
+    <div className="h-4 bg-white/5 rounded w-5/6"></div>
+    <div className="mt-auto h-8 bg-white/10 rounded w-1/4"></div>
+  </div>
+);
+
 export default function StoriesPage() {
   const { projectId } = useParams() as { projectId: string };
   const router = useRouter();
@@ -21,8 +30,8 @@ export default function StoriesPage() {
   const [activeStatus, setActiveStatus] = useState<Story["status"]>("todo");
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshData = async () => {
-    setIsLoading(true);
+  const refreshData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const [projectData, storiesData] = await Promise.all([
         ProjectService.getById(projectId),
@@ -45,13 +54,9 @@ export default function StoriesPage() {
   useEffect(() => {
     router.prefetch(`/projects/${projectId}/stories/create`)
   },[router, projectId])
-  
+
   const currentTheme = theme[activeStatus];
   const filteredStories = stories.filter(s => s.status === activeStatus);
-
-  if (isLoading) {
-    return <div className="p-12 text-white font-black italic uppercase">Loading Stories...</div>;
-  }
 
   return (
     <div className="relative p-12 min-h-screen text-white">
@@ -61,16 +66,17 @@ export default function StoriesPage() {
       
       <BackBtn title="Back to Projects" onClick={() => router.push(`/projects/`)}/>
       
-      <div className="relative z-20 flex justify-between items-end mb-6 px-2">
+      <div className="relative z-20 flex justify-between items-end mb-6 px-2 mt-4">
         <div className="flex flex-col">
           <h1 className="text-4xl font-black italic tracking-tighter transition-colors duration-700" 
               style={{ color: currentTheme.accent }}>
-            { activeProject?.name || "Untitled Project" }
+            { activeProject?.name || (isLoading ? "Loading..." : "Untitled Project") }
           </h1>
         </div>
-       <CreateButton 
+        <CreateButton 
           title="Create Story" 
-          onClick={() => router.push(`/projects/${projectId}/stories/create`)} />
+          onClick={() => router.push(`/projects/${projectId}/stories/create`)} 
+        />
       </div>
 
       <StatusTabs activeStatus={activeStatus} onStatusChange={setActiveStatus} />
@@ -91,20 +97,36 @@ export default function StoriesPage() {
 
         <div className="relative z-10 p-10 min-h-[600px] rounded-[37px] border border-white/10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredStories.map((story) => (
-              <StoryCard 
-                key={story.id} 
-                story={story} 
-                accentColor={currentTheme.accent} 
-              />
-            ))}
-          </div>
+            
+            {isLoading && stories.length === 0 ? (
+              <>
+                <StorySkeleton />
+                <StorySkeleton />
+                <StorySkeleton />
+                <StorySkeleton />
+                <StorySkeleton />
+                <StorySkeleton />
+              </>
+            ) : (              
+            <>
+                {filteredStories.map((story) => (
+                  <StoryCard 
+                    key={story.id} 
+                    story={story} 
+                    accentColor={currentTheme.accent} 
+                  />
+                ))}
 
-          {filteredStories.length === 0 && (
-            <div className="flex items-center justify-center h-[400px]">
-              <p className="text-gray-500 font-medium tracking-wide">NO STORIES IN THIS CATEGORY</p>
-            </div>
-          )}
+                {!isLoading && filteredStories.length === 0 && (
+                  <div className="col-span-full flex items-center justify-center h-[400px]">
+                    <p className="text-gray-500 font-medium tracking-wide uppercase italic">
+                      No stories in this category
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

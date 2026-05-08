@@ -62,13 +62,6 @@ export default function EditStoryPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white font-black italic uppercase tracking-widest">
-        Loading Story Data...
-      </div>
-    );
-  }
 
   if (!formData) return null;
 
