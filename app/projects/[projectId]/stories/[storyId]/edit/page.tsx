@@ -2,8 +2,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { StoryService } from "@/lib/storyServices";
-import { Story } from "@/types/story";
+import { Story, StoryStatus, StoryPriority } from "@/types/story";
 import BackBtn from "../../../../../../components/tasks/BackBtn";
+
 
 export default function EditStoryPage() {
   const params = useParams();
@@ -61,13 +62,6 @@ export default function EditStoryPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white font-black italic uppercase tracking-widest">
-        Loading Story Data...
-      </div>
-    );
-  }
 
   if (!formData) return null;
 
@@ -116,9 +110,8 @@ export default function EditStoryPage() {
             </label>
             <select 
               value={formData.priority}
-              onChange={(e) => setFormData({...formData, priority: e.target.value as any})}
-              className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer"
-            >
+              onChange={(e) => setFormData({...formData, priority: e.target.value as StoryPriority})}
+              className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer">
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -131,7 +124,7 @@ export default function EditStoryPage() {
             </label>
             <select 
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+              onChange={(e) => setFormData({...formData, status: e.target.value as StoryStatus})}
               className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="todo">Todo</option>

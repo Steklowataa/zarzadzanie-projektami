@@ -1,34 +1,13 @@
-// 'use client';
-// import { useNotifications } from "@/app/context/NotificationContext";
-// import Header from "../../components/projects/Header";
-
-// export default function ProjectPage() {
-//     const { user, loading } = useNotifications();
-
-//     if (loading) return <div className="p-10 text-white">Ładowanie...</div>;
-//     if (!user) return null;
-
-//     return (
-//         <>
-//             <Header/>
-//             <div className="p-6">
-//                 <h1 className="text-white text-4xl font-bold">Twoje Projekty</h1>
-//                 {/* Reszta Twojego kodu projektów */}
-//             </div>
-//         </>
-//     );
-// }
 "use client"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Project } from "../../types/project"
 import { useActiveProject } from "../../lib/useActiveProject"
-import { useNotifications } from "@/app/context/NotificationContext"
 import ProjectFilter from "../../components/projects/ProjectFilter"
 import Header from "../../components/projects/Header"
 import { ProjectService } from "../../lib/ProjectService"
-
+import Image from "next/image"
 
 export default function ProjectPage() {
     const router = useRouter()
@@ -36,15 +15,25 @@ export default function ProjectPage() {
     const [projects, setProjects] = useState<Project[]>([])
     const { activeProjectId } = useActiveProject()
 
-    const { user, loading } = useNotifications()
     const refreshProjects = async () => {
         const data = await ProjectService.getAll()
         setProjects(data)
     };
 
     useEffect(() => {
-        refreshProjects();
+        let isMoined = true;
+        
+        ProjectService.getAll().then(data => {
+            if(isMoined) {
+                setProjects(data)
+            }
+        })
+        return () => {
+            isMoined = false;
+        }
+
     }, []);
+
 
     const deleteProject = async (id: string) => {
         await ProjectService.delete(id);
@@ -57,9 +46,12 @@ export default function ProjectPage() {
 
     return (
             <>
+            <div className="fixed inset-0 z-[-1] bg-[#0a0a0a]">
+                <Image src="/images/bg-kanban.png" alt="" fill priority className="object-cover opacity-30"/>
+            </div>
             <Header/>
                      <div className="p-6 text-white">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-8 z-2">
                 <div>
                     <h1 className="text-4xl font-black italic uppercase tracking-tighter">Projects</h1>
                 </div>

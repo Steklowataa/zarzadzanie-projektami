@@ -15,7 +15,7 @@ export const StatusTabs = ({ activeStatus, onStatusChange }: Props) => {
   ];
 
   return (
-    <div className="flex justify-end gap-1 mb-[-2px] mr-4 relative z-10">
+    <div className="flex justify-end gap-1 mb-[-2px] mr-7 relative z-10">
       {tabs.map((tab) => (
         <button
           key={tab.value}

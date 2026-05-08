@@ -4,6 +4,10 @@ import { Task } from "@/types/task";
 import { User } from "@/settings";
 import DropdownMenu from "./DropdownMenu"; 
 import { STORY_PRIORITIES, PriorityLevel } from "../../types/prioritets"
+import { Trash2 } from "lucide-react";
+import { TaskService} from "@/lib/taskService";
+
+
 
 interface TaskCardProps {
   task: Task;
@@ -13,6 +17,7 @@ interface TaskCardProps {
   users: User[];
   handleAssignUser: (e: React.MouseEvent, taskId: string, userId: string) => void;
   handleComplete: (e: React.MouseEvent, taskId: string) => void;
+  onDelete: (taskId: string) => void; 
 }
 
 export default function TaskCard({
@@ -22,12 +27,19 @@ export default function TaskCard({
   setDropdown,
   users,
   handleAssignUser,
-  handleComplete
+  handleComplete,
+  onDelete
 }: TaskCardProps) {
   const priorityConfig = STORY_PRIORITIES[task.priority as PriorityLevel] || STORY_PRIORITIES.low;
-
   const userDropdownKey = `${task.id}-user`;
   const statusDropdownKey = `${task.id}-status`;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+      if(window.confirm("Napewno usunac taskę?")) {
+        onDelete(task.id)
+    }
+  }
 
   return (
     <>
@@ -45,6 +57,10 @@ export default function TaskCard({
         <h4 className="font-bold text-sm group-hover:text-[#B9FF68] transition-colors uppercase tracking-tight leading-tight">
           {task.name}
         </h4>
+        <Trash2 
+          size={18} 
+          onClick={handleDelete}
+          className="cursor-pointer text-gray-500 hover:text-red-500 transition-colors relative ml-2"/>
       </div>
 
       <div className="flex justify-between items-center pt-4 border-t border-white/5">

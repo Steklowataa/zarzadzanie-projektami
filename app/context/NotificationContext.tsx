@@ -36,6 +36,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const isLoginPage = pathname === '/login';
+    const isAuthorised = pathname === "/login/authorisation"
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
@@ -66,11 +67,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (loading) return;
 
+        // nie zalogowany
         if (!user && !isLoginPage) {
             router.push('/login');
         }
 
-        if (user && isLoginPage) {
+        // nie zalogowany i ma status goscia
+        if (user && user.role === 'guest') {
+            if (!isAuthorised) {
+                router.push('/login/authorisation');
+        }
+            return; 
+        }
+
+        // normalny user
+        if (user && user.role != "guest" && (isLoginPage || isAuthorised)) {
             router.push('/projects');
         }
 

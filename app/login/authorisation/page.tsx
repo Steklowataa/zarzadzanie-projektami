@@ -1,10 +1,19 @@
 'use client';
-
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function AuthorisationPage() {
   const router = useRouter();
+
+  const handleRedirect = async () => {
+    try {
+      await signOut(auth)
+      router.push('/');
+    } catch (error) {
+
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] bg-gray-200 flex flex-col items-center justify-center cursor-not-allowed">
@@ -15,10 +24,7 @@ export default function AuthorisationPage() {
         <p className="text-gray-400 text-sm mt-4">Poczekaj, aż administrator nada Ci uprawnienia do korzystania z aplikacji.</p>
         
         <button 
-          onClick={() => {
-            sessionStorage.clear();
-            router.push('/');
-          }}
+          onClick={handleRedirect}
           className="mt-6 text-sm text-blue-600 hover:underline">
           Zaloguj się na inne konto
         </button>

@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { StoryService } from "@/lib/storyServices";
-import { currentUser } from "@/types/mockUpUsers";
+import { auth } from "@/firebase";
 import BackBtn from "../../../../../components/tasks/BackBtn";
+import { Priority} from "@/types/prioritets";
 
 export default function CreateStoryPage() {
   const { projectId } = useParams() as { projectId: string };
@@ -14,9 +15,15 @@ export default function CreateStoryPage() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const user = auth.currentUser;
 
+    if (!user) return;
+
+    
     const newStory = {
       id: uuidv4(),
       name,
@@ -24,7 +31,7 @@ export default function CreateStoryPage() {
       status: "todo" as const,
       priority,
       projectId,
-      ownerId: currentUser.id,
+      ownerId: user.uid,
       createdAt: new Date().toISOString(),
     };
 
@@ -63,7 +70,7 @@ export default function CreateStoryPage() {
           </label>
           <select
             value={priority}
-            onChange={(e) => setPriority(e.target.value as any)}
+            onChange={(e) => setPriority(e.target.value as Priority)}
             className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="low">Low</option>
@@ -87,8 +94,7 @@ export default function CreateStoryPage() {
 
         <button
           type="submit"
-          className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer"
-        >
+          className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer">
           Create Story
         </button>
       </form>

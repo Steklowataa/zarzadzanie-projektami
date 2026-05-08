@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { ProjectService } from "@/lib/ProjectService";
-import { currentUser } from "@/types/mockUpUsers";
 import BackBtn from "../../../components/tasks/BackBtn";
+import { auth } from "@/firebase";
+
 
 export default function CreateProjectPage() {
     const router = useRouter();
@@ -14,11 +15,14 @@ export default function CreateProjectPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const user = auth.currentUser
+
+        if(!user) return;
         const newProject = {
             id: uuidv4(),
             name,
             description,
-            ownerId: currentUser.id 
+            ownerId: user.uid
         };
 
         await ProjectService.create(newProject);

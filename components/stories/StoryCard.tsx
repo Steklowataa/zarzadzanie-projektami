@@ -63,7 +63,6 @@ export const StoryCard = ({ story, accentColor }: StoryCardProps) => {
           </span>
           
           <div className="relative group/tooltip cursor-pointer">
-            {/* Żarówka świeci w kolorze sekcji */}
             <Lightbulb 
               size={22} 
               style={{ 
