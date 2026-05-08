@@ -33,11 +33,9 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         });
       }
-
-      // ✅ SOFT REDIRECT (Next.js)
       router.push('/projects');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Błąd logowania. Spróbuj ponownie.');
       setIsLoggingIn(false);
     }
@@ -46,12 +44,11 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f2f5]">
       <div className="bg-white p-10 rounded-xl shadow-lg text-center min-w-[350px]">
-        <h1 className="text-2xl font-bold mb-8">System Zarządzania</h1>
+        <h1 className="text-2xl font-bold mb-8 text-black">System Zarządzania Projektami</h1>
         <button 
           onClick={handleGoogleLogin}
           disabled={isLoggingIn}
-          className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 w-full"
-        >
+          className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 w-full">
           {isLoggingIn ? 'Logowanie...' : 'Zaloguj się przez Google'}
         </button>
         {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}

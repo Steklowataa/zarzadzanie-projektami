@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Task } from "@/types/task";
 import { TaskService } from "@/lib/taskService";
 import BackBtn from "@/components/tasks/BackBtn";
+import { Priority} from "@/types/prioritets";
 
 export default function CreateTaskPage() {
   const params = useParams();
@@ -41,7 +42,6 @@ export default function CreateTaskPage() {
     };
 
     try {
-      // Wykorzystanie asynchronicznej metody z TaskService
       await TaskService.create(newTask);
       router.push(`/projects/${projectId}/stories/${storyId}/tasks`);
       router.refresh();
@@ -62,7 +62,6 @@ export default function CreateTaskPage() {
       <h1 className="text-3xl font-black uppercase italic mb-8 mt-4">Create New Task</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Task Name */}
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
             Task Name
@@ -78,17 +77,15 @@ export default function CreateTaskPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Priority */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
               Priority
             </label>
             <select
               value={priority}
-              onChange={(e) => setPriority(e.target.value as any)}
+              onChange={(e) => setPriority(e.target.value as Priority)}
               className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer"
-              disabled={isSubmitting}
-            >
+              disabled={isSubmitting}>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>

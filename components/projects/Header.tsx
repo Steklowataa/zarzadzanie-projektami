@@ -15,7 +15,7 @@ export default function Header() {
     const handleLogout = async () => {
         await auth.signOut();
         sessionStorage.clear();
-        window.location.href = '/login';
+        window.location.href = '/login/admin';
     }
 
     return (

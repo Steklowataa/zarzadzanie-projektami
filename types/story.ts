@@ -8,3 +8,6 @@ export interface Story {
     createdAt: string;
     ownerId: string;
 }
+
+export type StoryStatus = "todo" | "in progress" | "done";
+export type StoryPriority = "low" | "medium" | "high";

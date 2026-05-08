@@ -42,6 +42,10 @@ export default function StoriesPage() {
     refreshData();
   }, [projectId]);
 
+  useEffect(() => {
+    router.prefetch(`/projects/${projectId}/stories/create`)
+  },[router, projectId])
+  
   const currentTheme = theme[activeStatus];
   const filteredStories = stories.filter(s => s.status === activeStatus);
 

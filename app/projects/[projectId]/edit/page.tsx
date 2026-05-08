@@ -20,7 +20,6 @@ export default function EditProject({ params: paramsPromise }: { params: Promise
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        // Używamy params.projectId, bo tak nazwałaś parametr w definicji
         const currentProject = await ProjectService.getById(params.projectId)
         if (currentProject) {
           setProject(currentProject)
@@ -35,7 +34,7 @@ export default function EditProject({ params: paramsPromise }: { params: Promise
     }
 
     fetchProject()
-  }, [params.projectId]) // Poprawiona zależność
+  }, [params.projectId])
 
   const { activeProjectId, setActiveProject } = useActiveProject()
 
@@ -90,8 +89,7 @@ export default function EditProject({ params: paramsPromise }: { params: Promise
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all text-white"
             placeholder="Enter project name..."
-            required
-          />
+            required/>
         </div>
 
         <div>
@@ -103,27 +101,24 @@ export default function EditProject({ params: paramsPromise }: { params: Promise
             onChange={(e) => setDescription(e.target.value)}
             className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all h-32 text-white"
             placeholder="What is this project about?"
-            required
-          />
+            required/>
         </div>
 
         <div className="flex flex-col gap-4">
           <button 
             type="submit" 
-            className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer"
-          >
+            className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer">
             Save Changes
           </button>
 
           <button 
-            type="button" // Ważne, żeby nie triggerował submitu formularza
+            type="button"
             onClick={handleActive} 
             disabled={isProjectActive}
             className={`w-full p-4 rounded-xl font-black uppercase text-sm transition-all cursor-pointer
               ${isProjectActive 
                 ? 'bg-white/10 text-gray-500 border border-white/10 cursor-not-allowed' 
-                : 'bg-white text-black hover:bg-gray-200'}`}
-          >
+                : 'bg-white text-black hover:bg-gray-200'}`}>
             {isProjectActive ? 'Project is Active' : 'Set as Active Project'}
           </button>
         </div>

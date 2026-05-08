@@ -1,5 +1,6 @@
-import { User } from "@/types/user"; 
 import { Task } from "@/types/task";
+import { User } from "@/settings";
+
 
 interface DropdownMenuProps {
   setDropdown: (id: string | null) => void;

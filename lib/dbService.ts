@@ -1,5 +1,5 @@
 import { db } from "@/firebase";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp, getDocs, collection} from "firebase/firestore";
 import { DB_CONFIG } from "@/settings";
 import { User } from "@/settings";
 
@@ -16,6 +16,23 @@ export class UserService {
         } else {
             const users = JSON.parse(localStorage.getItem('app_users') || '[]');
             return users.find((u: User) => u.id === userId) || null;
+        }
+    }
+
+    static async getAllUsers(): Promise<User[]> {
+        if (DB_CONFIG === 'firebase') {
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                return querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                } as User));
+            } catch (e) {
+                console.error("Błąd pobierania listy użytkowników:", e);
+                return [];
+            }
+        } else {
+            return JSON.parse(localStorage.getItem('app_users') || '[]');
         }
     }
 

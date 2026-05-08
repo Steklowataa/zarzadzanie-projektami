@@ -8,12 +8,13 @@ import {
     deleteDoc, 
     updateDoc, 
     query, 
-    where 
+    where
 } from "firebase/firestore";
 import { Story } from "../types/story";
 
 export class StoryService {
     private static collectionName = "stories";
+
     static async getAllByProject(projectId: string): Promise<Story[]> {
         try {
             const q = query(
@@ -51,6 +52,13 @@ export class StoryService {
 
     static async create(story: Story): Promise<void> {
         try {
+            // Log do debugowania - sprawdź w konsoli co tu wpada
+            console.log("Tworzenie story z właścicielem:", story.ownerId);
+            
+            if (!story.ownerId || story.ownerId === "1") {
+                console.warn("Uwaga: Próba utworzenia story z niepoprawnym ownerId!");
+            }
+
             await setDoc(doc(db, this.collectionName, story.id), story);
         } catch (e) {
             console.error("Błąd tworzenia story:", e);
@@ -61,11 +69,13 @@ export class StoryService {
     static async edit(updatedStory: Story): Promise<void> {
         try {
             const docRef = doc(db, this.collectionName, updatedStory.id);
+            // Dodajemy ownerId do listy aktualizowanych pól
             await updateDoc(docRef, {
                 name: updatedStory.name,
                 description: updatedStory.description,
                 status: updatedStory.status,
                 priority: updatedStory.priority,
+                ownerId: updatedStory.ownerId // Teraz zmiana właściciela zadziała
             });
         } catch (e) {
             console.error("Błąd edycji story:", e);

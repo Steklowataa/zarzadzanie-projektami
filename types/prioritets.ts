@@ -13,4 +13,5 @@ export const STORY_PRIORITIES = {
   },
 } as const;
 
+export type Priority = "low" | "medium" | "high"
 export type PriorityLevel = keyof typeof STORY_PRIORITIES;
