@@ -29,8 +29,8 @@ export class TaskService {
     if (!snap.exists()) return undefined;
 
     return {
+      ...(snap.data() as Task),
       id: snap.id,
-      ...(snap.data() as Task)
     };
   }
 
