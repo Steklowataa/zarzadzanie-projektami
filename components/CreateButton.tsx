@@ -21,7 +21,7 @@ function CreateButton({ title, onClick }: CreateButtonProps) {
             onClick={handleClick}
             disabled={isPending}
             className={`
-                bg-[#B9FF68] text-black px-6 py-3 rounded-full font-black text-xs uppercase
+                bg-[#B9FF68] text-black px-6 py-3 rounded-full font-black text-xs
                 hover:scale-105 transition flex items-center gap-2 shadow-[0_0_20px_rgba(185,255,104,0.3)] 
                 cursor-pointer active:scale-95 disabled:opacity-70 disabled:cursor-wait
             `}>

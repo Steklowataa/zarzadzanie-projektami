@@ -7,7 +7,7 @@ import {
     setDoc, 
     deleteDoc, 
     updateDoc, 
-    addDoc 
+    addDoc, where, query
 } from "firebase/firestore";
 import { Project } from "../types/project";
 
@@ -38,17 +38,15 @@ export class ProjectService {
 
     static async create(project: Project): Promise<void> {
         try {
-            // Zapisujemy projekt
             await setDoc(doc(db, this.collectionName, project.id), project);
 
-            // Powiadomienie dla admina lub właściciela
             await addDoc(collection(db, "notifications"), {
                 title: "Utworzono nowy projekt",
                 message: `Projekt "${project.name}" został utworzony.`,
                 date: new Date().toISOString(),
                 priority: "high",
                 isRead: false,
-                recipientId: project.ownerId // Tutaj trafia ID z obiektu project
+                recipientId: project.ownerId 
             });
             
         } catch (e) {
@@ -71,10 +69,18 @@ export class ProjectService {
     }
 
     static async delete(id: string): Promise<void> {
-        try {
-            await deleteDoc(doc(db, this.collectionName, id));
-        } catch (e) {
-            console.error("Błąd usuwania projektu:", e);
+        const storiesQuery = query(collection(db, "stories"), where("projectId", "==", id));
+        const storiesSnap = await getDocs(storiesQuery);
+        for (const storyDoc of storiesSnap.docs) {
+            const tasksQuery = query(collection(db, "tasks"), where("storyId", "==", storyDoc.id));
+            const tasksSnap = await getDocs(tasksQuery);
+            
+            const taskPromises = tasksSnap.docs.map(t => deleteDoc(doc(db, "tasks", t.id)));
+            await Promise.all(taskPromises);
+
+            await deleteDoc(doc(db, "stories", storyDoc.id));
         }
+
+        await deleteDoc(doc(db, "projects", id));
     }
 }

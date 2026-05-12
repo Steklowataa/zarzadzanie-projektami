@@ -1,17 +1,14 @@
-"use client"
-import { Clock, User as UserIcon, Lightbulb, CheckCircle2 } from "lucide-react";
+"use client";
+
+import { Clock, User as UserIcon, Lightbulb, CheckCircle2, Trash2 } from "lucide-react";
 import { Task } from "@/types/task";
 import { User } from "@/settings";
 import DropdownMenu from "./DropdownMenu"; 
 import { STORY_PRIORITIES, PriorityLevel } from "../../types/prioritets"
-import { Trash2 } from "lucide-react";
-import { TaskService} from "@/lib/taskService";
-
-
 
 interface TaskCardProps {
   task: Task;
-  owner: User | undefined;
+  assignUser: User | undefined;
   openDropdown: string | null;
   setDropdown: (id: string | null) => void;
   users: User[];
@@ -22,7 +19,7 @@ interface TaskCardProps {
 
 export default function TaskCard({
   task,
-  owner,
+  assignUser,
   openDropdown, 
   setDropdown,
   users,
@@ -36,13 +33,14 @@ export default function TaskCard({
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-      if(window.confirm("Napewno usunac taskę?")) {
-        onDelete(task.id)
+    if(window.confirm("Napewno usunac taskę?")) {
+      onDelete(task.id)
     }
   }
 
   return (
     <>
+      {/* NAGŁÓWEK TASKI */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative group/tooltip cursor-pointer">
           <Lightbulb 
@@ -60,10 +58,14 @@ export default function TaskCard({
         <Trash2 
           size={18} 
           onClick={handleDelete}
-          className="cursor-pointer text-gray-500 hover:text-red-500 transition-colors relative ml-2"/>
+          className="cursor-pointer text-gray-500 hover:text-red-500 transition-colors relative ml-2"
+        />
       </div>
 
+      {/* STOPKA TASKI */}
       <div className="flex justify-between items-center pt-4 border-t border-white/5">
+        
+        {/* SEKCJA PRZYPISANIA UŻYTKOWNIKA */}
         <div className="relative">
           <div
             onClick={(e) => {
@@ -72,10 +74,10 @@ export default function TaskCard({
             }}
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
             <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center border border-white/5">
-              <UserIcon size={12} className={owner ? "text-[#B9FF68]" : "text-gray-400"}/>
+              <UserIcon size={12} className={assignUser ? "text-[#B9FF68]" : "text-gray-400"}/>
             </div>
             <span className="text-[10px] text-gray-400 font-bold uppercase">
-              {owner ? owner.name : "Unassigned"}
+              {assignUser ? assignUser.name : "Unassigned"}
             </span>
           </div>
           {openDropdown === userDropdownKey && (
@@ -88,9 +90,10 @@ export default function TaskCard({
           )}
         </div>
 
+        {/* SEKCJA STATUSU (Z TEST-ID) */}
         <div className="relative">
           {task.status === "done" ? (
-             <div className="flex flex-col items-center">
+             <div className="flex flex-col items-center" data-testid="task-finished">
                 <span className="text-[7px] text-gray-600 font-black uppercase tracking-widest">Finished</span>
                 <span className="text-[9px] text-[#B9FF68] font-mono">
                     {task.dateEnd ? new Date(task.dateEnd).toLocaleDateString() : "--"}
@@ -103,8 +106,8 @@ export default function TaskCard({
                     e.stopPropagation();
                     setDropdown(openDropdown === statusDropdownKey ? null : statusDropdownKey);
                   }}
-                  className="text-[10px] text-gray-500 font-black uppercase tracking-widest cursor-pointer hover:text-[#B9FF68] transition-colors bg-white/5 px-2 py-1 rounded"
-                >
+                  data-testid="status-toggle"
+                  className="text-[10px] text-gray-500 font-black uppercase tracking-widest cursor-pointer hover:text-[#B9FF68] transition-colors bg-white/5 px-2 py-1 rounded">
                   {task.status === "in progress" ? "Doing" : "Todo"}
                 </div>
 
@@ -117,8 +120,8 @@ export default function TaskCard({
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl z-40 overflow-hidden">
                         <button
                           onClick={(e) => handleComplete(e, task.id)}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-3 text-[10px] font-black uppercase text-[#B9FF68] hover:bg-[#B9FF68] hover:text-black transition-all"
-                        >
+                          data-testid="set-done-button"
+                          className="w-full flex items-center justify-center gap-2 px-3 py-3 text-[10px] font-black uppercase text-[#B9FF68] hover:bg-[#B9FF68] hover:text-black transition-all">
                           <CheckCircle2 size={12} />
                           Set Done
                         </button>
@@ -129,6 +132,7 @@ export default function TaskCard({
           )}
         </div>
 
+        {/* CZAS PRACY */}
         <div className="flex items-center gap-1 text-gray-600">
           <Clock size={10} />
           <span className="text-[9px] font-mono">{task.timeofWork}h</span>

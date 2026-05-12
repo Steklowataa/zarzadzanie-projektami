@@ -16,7 +16,6 @@ import SkeletonTask from "../../../../../../components/tasks/SkeletonTask";
 
 
 
-
 export default function TaskKanbanPage() {
   const { projectId, storyId } = useParams<{ projectId: string; storyId: string }>();
   const router = useRouter();
@@ -87,6 +86,7 @@ export default function TaskKanbanPage() {
 
     try { 
       await TaskService.completeTask(taskId);
+      await refreshData();
     } catch (error) {
       setTasks(previousTasks)
     }
@@ -97,10 +97,11 @@ export default function TaskKanbanPage() {
     e.stopPropagation();
     const previousTasks = [...tasks];
 
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, ownerId: userId, status: 'in progress' } : t));
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, assignUserId: userId, status: 'in progress' } : t));
     setDropdown(null);
     try {
       await TaskService.assignUser(taskId, userId);
+      await refreshData();
     } catch (error) {
       setTasks(previousTasks);
     }
@@ -134,7 +135,7 @@ export default function TaskKanbanPage() {
                   tasks
                     .filter(t => t.status === col.id)
                     .map(task => {
-                      const owner = appUsers.find(u => u.id === task.ownerId);
+                      const assignUser = appUsers.find(u => u.id === task.assignUserId);
                       return (
                         <div 
                           key={task.id}
@@ -142,7 +143,7 @@ export default function TaskKanbanPage() {
                           className="group bg-[#1a1a1a]/80 p-5 rounded-2xl border border-white/5 hover:border-[#B9FF68]/40 transition-all cursor-pointer shadow-lg relative">
                           <TaskCard 
                             task={task} 
-                            owner={owner} 
+                            assignUser={assignUser} 
                             openDropdown={openDropdown} 
                             setDropdown={setDropdown}
                             users={appUsers}

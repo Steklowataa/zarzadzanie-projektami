@@ -52,7 +52,6 @@ export class StoryService {
 
     static async create(story: Story): Promise<void> {
         try {
-            // Log do debugowania - sprawdź w konsoli co tu wpada
             console.log("Tworzenie story z właścicielem:", story.ownerId);
             
             if (!story.ownerId || story.ownerId === "1") {
