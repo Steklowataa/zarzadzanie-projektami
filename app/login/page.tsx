@@ -35,9 +35,10 @@ export default function LoginPage() {
       }
       router.push('/projects');
 
-    } catch (err: unknown) {
-      setError('Błąd logowania. Spróbuj ponownie.');
-      setIsLoggingIn(false);
+    } catch (err: any) {
+        console.error("PEŁNY BŁĄD FIREBASE:", err);
+        setError(`Błąd: ${err.code || err.message}`);
+        setIsLoggingIn(false);
     }
   };
 

@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp} from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, setPersistence, browserSessionPersistence} from "firebase/auth";
+import { initializeAuth, setPersistence, browserSessionPersistence, getAuth} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAMZsVuv_kPQvlBLBFviL6xgOBcjO_DXzY",
@@ -13,8 +13,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app)
-export const auth = getAuth(app)
-setPersistence(auth, browserSessionPersistence)
+// const app = initializeApp(firebaseConfig);
+// export const db = getFirestore(app)
+// export const auth = initializeAuth(app, {
+//   persistence: browserSessionPersistence
+// })
 
+// setPersistence(auth, browserSessionPersistence)
+
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+export const db = getFirestore(app);
+export const auth = getAuth(app);

@@ -11,4 +11,5 @@ export interface Task {
       ownerId: string,
       dateStart: string,
       dateEnd: string
+      assignUserId?: string
 }

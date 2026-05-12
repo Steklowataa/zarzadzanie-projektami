@@ -21,15 +21,13 @@ export default function ProjectPage() {
     };
 
     useEffect(() => {
-        let isMoined = true;
-        
-        ProjectService.getAll().then(data => {
-            if(isMoined) {
-                setProjects(data)
-            }
-        })
+        refreshProjects();
+        const handleFocus = () => {
+            refreshProjects();
+        }
+        window.addEventListener("focus", handleFocus);
         return () => {
-            isMoined = false;
+            window.removeEventListener("focus", handleFocus);
         }
 
     }, []);
@@ -50,7 +48,7 @@ export default function ProjectPage() {
                 <Image src="/images/bg-kanban.png" alt="" fill priority className="object-cover opacity-30"/>
             </div>
             <Header/>
-                     <div className="p-6 text-white">
+            <div className="p-6 text-white">
             <div className="flex justify-between items-center mb-8 z-2">
                 <div>
                     <h1 className="text-4xl font-black italic uppercase tracking-tighter">Projects</h1>
@@ -64,7 +62,7 @@ export default function ProjectPage() {
                     <div key={project.id || `project-${project.name}}`}
                         className={`p-6 rounded-3xl border transition-all ${project.id === activeProjectId ? 'bg-white/10 border-[#B9FF68]' : 'bg-white/5 border-white/10'}`}>
                         <div className="flex justify-between items-start mb-4">
-                            <h2 className="text-xl font-bold uppercase tracking-tight">{project.name}</h2>
+                            <h2 className="text-xl font-bold tracking-tight">{project.name}</h2>
                             {project.id === activeProjectId && (
                                 <span className="bg-[#B9FF68] text-black text-[10px] px-2 py-0.5 rounded font-black uppercase">Active</span>
                             )}
@@ -84,7 +82,7 @@ export default function ProjectPage() {
                             </button>
                             <Link 
                                 href={`/projects/${project.id}/stories`} 
-                                className="text-xs font-bold uppercase text-[#B9FF68] ml-auto hover:underline">
+                                className="text-xs font-bold text-[#B9FF68] ml-auto hover:underline">
                                 Go to Stories →
                             </Link>
                         </div>

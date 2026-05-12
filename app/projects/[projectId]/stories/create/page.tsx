@@ -61,6 +61,7 @@ export default function CreateStoryPage() {
             className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all"
             placeholder="Enter story name..."
             required
+            id="inputName"
           />
         </div>
 
@@ -71,8 +72,7 @@ export default function CreateStoryPage() {
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value as Priority)}
-            className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer"
-          >
+            className="w-full bg-[#1a1a1a] border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all appearance-none cursor-pointer">
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
@@ -89,12 +89,13 @@ export default function CreateStoryPage() {
             className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all h-32"
             placeholder="Describe the story goals..."
             required
+            id="inputDescription"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer">
+          className="w-full bg-[#B9FF68] text-black font-black p-4 rounded-xl hover:scale-[1.02] transition-transform cursor-pointer">
           Create Story
         </button>
       </form>

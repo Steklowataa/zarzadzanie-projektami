@@ -26,8 +26,9 @@ export default function CreateProjectPage() {
         };
 
         await ProjectService.create(newProject);
-        router.push("/projects"); 
         router.refresh()
+        router.push("/projects"); 
+        
     };
 
     return (
@@ -43,6 +44,7 @@ export default function CreateProjectPage() {
                         className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all"
                         placeholder="Enter project name..."
                         required
+                        id="inputName"
                     />
                 </div>
                 <div>
@@ -53,6 +55,7 @@ export default function CreateProjectPage() {
                         className="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:border-[#B9FF68] outline-none transition-all h-32"
                         placeholder="What is this project about?"
                         required
+                        id="inputDescription"
                     />
                 </div>
                 <button type="submit" className="w-full bg-[#B9FF68] text-black font-black uppercase p-4 rounded-xl hover:scale-[1.02] transition-transform">
