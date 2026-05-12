@@ -12,7 +12,7 @@ interface TaskCardProps {
   openDropdown: string | null;
   setDropdown: (id: string | null) => void;
   users: User[];
-  handleAssignUser: (e: React.MouseEvent, taskId: string, userId: string) => void;
+  handleAssignUser: (e: React.MouseEvent, taskId: string, userId: string) => Promise<void>;
   handleComplete: (e: React.MouseEvent, taskId: string) => void;
   onDelete: (taskId: string) => void; 
 }
@@ -90,7 +90,6 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* SEKCJA STATUSU (Z TEST-ID) */}
         <div className="relative">
           {task.status === "done" ? (
              <div className="flex flex-col items-center" data-testid="task-finished">
@@ -132,7 +131,6 @@ export default function TaskCard({
           )}
         </div>
 
-        {/* CZAS PRACY */}
         <div className="flex items-center gap-1 text-gray-600">
           <Clock size={10} />
           <span className="text-[9px] font-mono">{task.timeofWork}h</span>
