@@ -6,6 +6,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { NotificationService } from '@/lib/notificationService';
 import { Message } from '@/types/messages';
 import { usePathname, useRouter } from 'next/navigation';
+import { NotificationAdapter } from '@/lib/notificationAdapter';
+
 
 // Typy
 interface User { 
@@ -37,6 +39,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
     const isLoginPage = pathname === '/login';
     const isAuthorised = pathname === "/login/authorisation"
+
+    useEffect(() => {
+    if (typeof window !== "undefined") {
+        console.log("[NotificationProvider] Budzę NotificationAdapter...");
+        NotificationAdapter.init();
+        }
+    }, []);
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
