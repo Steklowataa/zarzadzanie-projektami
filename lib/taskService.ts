@@ -1,115 +1,95 @@
 import { Task } from "../types/task";
 import { StoryService } from "./storyServices";
-import { db } from "@/firebase";
-import { collection, getDocs, getDoc, doc, setDoc, deleteDoc, updateDoc, query, where,addDoc} from "firebase/firestore";
+import { FirebaseTaskBackend } from "./task/FirebaseTaskBackend";
+import { LocalStorageTaskBackend } from "./task/LocalstorageBackend";
+import { eventBus, APP_EVENTS } from "@/utils/eventBus";
+import { StorageType } from "../settings";
 
 export class TaskService {
-  private static collectionName = "tasks";
-  static async getAllByStory(storyId: string): Promise<Task[]> {
-    const q = query(
-      collection(db, this.collectionName),
-      where("storyId", "==", storyId)
-    );
-
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(d => {
-      const data = d.data() as Task;
-
-      return {
-        ...data,
-        id: d.id
-      };
-    });
-  }
-
- 
-  static async getById(taskId: string) {
-    const snap = await getDoc(doc(db, this.collectionName, taskId));
-    if (!snap.exists()) return undefined;
-
-    return {
-      ...(snap.data() as Task),
-      id: snap.id,
-    };
-  }
-
-  static async create(task: Task): Promise<void> {
-    const taskRef = doc(db, this.collectionName, task.id);
-
-    await setDoc(taskRef, {
-      ...task,
-      ownerId: task.ownerId,
-      assignUserId: task.assignUserId ?? null,
-      status: task.status ?? "todo",
-      dateCreated: new Date().toISOString()
-    });
-
-    const story = await StoryService.getById(task.storyId);
-    if (story && story.status === "todo") {
-      await StoryService.edit({ ...story, status: "in progress" });
-    }
-  }
-
-  static async assignUser(taskId: string, userId: string): Promise<void> {
-    const taskRef = doc(db, this.collectionName, taskId);
-
-    await updateDoc(taskRef, {
-      assignUserId: userId,
-      status: "in progress",
-      dateStart: new Date().toISOString()
-    });
-    
-
-    const task = await this.getById(taskId);
-    if (!task) return;
-
-    const story = await StoryService.getById(task.storyId);
-    if(story && story.status !== "in progress") {
-      await StoryService.edit({ ...story, status: "in progress" });
+    private static getBackend() {
+        const currentStorage: StorageType = (localStorage.getItem("storage_type") as StorageType) || "firebase";
+        return currentStorage === "local" ? LocalStorageTaskBackend : FirebaseTaskBackend;
     }
 
-    if (story?.ownerId) {
-      await addDoc(collection(db, "notifications"), {
-        title: "User assigned",
-        message: `${userId} assigned to ${task.name}`,
-        dateStart: new Date().toISOString(),
-        recipientId: userId,
-        priority: "high",
-        isRead: false
-      });
+    static async getAllByStory(storyId: string): Promise<Task[]> {
+        return await this.getBackend().getAllByStory(storyId);
     }
-  }
 
-
-  static async completeTask(taskId: string): Promise<void> {
-    const taskRef = doc(db, this.collectionName, taskId);
-
-    await updateDoc(taskRef, {
-      status: "done",
-      dateEnd: new Date().toISOString()
-    });
-
-    const task = await this.getById(taskId);
-    if (!task) return;
-
-    const tasks = await this.getAllByStory(task.storyId);
-    const allDone = tasks.length > 0 && tasks.every(t => t.status === "done");
-
-    if (allDone) {
-      const story = await StoryService.getById(task.storyId);
-      if (story && story.status !== "done") {
-        await StoryService.edit({ ...story, status: "done" });
-      }
-    } else {
-      const story = await StoryService.getById(task.storyId);
-      if (story && story.status !== "in progress") {
-        await StoryService.edit({ ...story, status: "in progress" });
-      }
+    static async getById(taskId: string) {
+        return await this.getBackend().getById(taskId);
     }
-  }
 
-  static async delete(taskId: string): Promise<void> {
-    await deleteDoc(doc(db, this.collectionName, taskId));
-  }
+    static async create(task: Task): Promise<void> {
+        await this.getBackend().create(task);
+        const story = await StoryService.getById(task.storyId);
+        if (story && story.status === "todo") {
+            await StoryService.edit({ ...story, status: "in progress" });
+        }
+
+        eventBus.emit(APP_EVENTS.TASK_CREATED, {
+            taskName: task.name,
+            recipientId: task.ownerId
+        });
+    }
+
+    static async assignUser(taskId: string, userId: string): Promise<void> {
+        await this.getBackend().updateAssignment(taskId, userId);
+
+        const task = await this.getById(taskId);
+        if (!task) return;
+
+        const story = await StoryService.getById(task.storyId);
+        if (story && story.status !== "in progress") {
+            await StoryService.edit({ ...story, status: "in progress" });
+        }
+
+        if (story?.ownerId) {
+            eventBus.emit(APP_EVENTS.TASK_ASSIGNED, {
+                taskName: task.name,
+                assigneeId: userId
+            });
+        }
+    }
+
+    static async completeTask(taskId: string): Promise<void> {
+        await this.getBackend().completeTask(taskId);
+
+        const task = await this.getById(taskId);
+        if (!task) return;
+
+        const tasks = await this.getAllByStory(task.storyId);
+        const allDone = tasks.length > 0 && tasks.every(t => t.status === "done");
+
+        if (allDone) {
+            const story = await StoryService.getById(task.storyId);
+            if (story && story.status !== "done") {
+                await StoryService.edit({ ...story, status: "done" });
+            }
+        } else {
+            const story = await StoryService.getById(task.storyId);
+            if (story && story.status !== "in progress") {
+                await StoryService.edit({ ...story, status: "in progress" });
+            }
+        }
+
+        eventBus.emit(APP_EVENTS.TASK_STATUS_CHANGED, {
+            taskName: task.name,
+            oldStatus: "in progress",
+            newStatus: "done",
+            recipientId: task.assignUserId || task.ownerId
+        });
+    }
+
+    static async delete(taskId: string): Promise<void> {
+        const task = await this.getById(taskId);
+        
+        await this.getBackend().delete(taskId);
+
+        if (task) {
+            eventBus.emit(APP_EVENTS.TASK_DELETED, {
+                taskName: task.name,
+                recipientId: task.ownerId
+            });
+        }
+    }
 }

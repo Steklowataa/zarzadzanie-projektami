@@ -10,9 +10,14 @@ export const APP_EVENTS = {
 
 export const eventBus = {
   on(event: string, callback: (data: any) => void) {
-    document.addEventListener(event, (e) => callback((e as CustomEvent).detail));
+    console.log(`[EventBus] Zarejestrowano nasłuchiwanie na: ${event}`);
+    document.addEventListener(event, (e) => {
+      console.log(`[EventBus] Sukces! Odebrano zdarzenie: ${event}`, (e as CustomEvent).detail);
+      callback((e as CustomEvent).detail);
+    });
   },
   emit(event: string, data: any) {
+    console.log(`[EventBus] Nadawanie zdarzenia: ${event} z danymi:`, data);
     document.dispatchEvent(new CustomEvent(event, { detail: data }));
   }
 };

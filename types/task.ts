@@ -13,3 +13,5 @@ export interface Task {
       dateEnd: string
       assignUserId?: string
 }
+
+export type TaskStatus = "todo" | "in progress" | "done";

@@ -1,94 +1,36 @@
-import { db } from "../firebase";
-import { 
-    collection, 
-    getDocs, 
-    getDoc, 
-    doc, 
-    setDoc, 
-    deleteDoc, 
-    updateDoc, 
-    query, 
-    where
-} from "firebase/firestore";
 import { Story } from "../types/story";
+import { FirebaseStoryBackend } from "./story/FirebaseStoryBackend";
+import { LocalStorageStoryBackend } from "./story/LocalstorageStoryBackend";
+import { eventBus, APP_EVENTS } from "@/utils/eventBus";
+import { StorageType } from "../settings"; 
 
 export class StoryService {
-    private static collectionName = "stories";
+    private static getBackend() {
+        const currentStorage: StorageType = (localStorage.getItem("storage_type") as StorageType) || "firebase";
+        return currentStorage === "local" ? LocalStorageStoryBackend : FirebaseStoryBackend;
+    }
 
     static async getAllByProject(projectId: string): Promise<Story[]> {
-        try {
-            const q = query(
-                collection(db, this.collectionName), 
-                where("projectId", "==", projectId)
-            );
-            const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id
-            } as Story));
-        } catch (e) {
-            console.error("Błąd pobierania stories:", e);
-            return [];
-        }
+        return await this.getBackend().getAllByProject(projectId);
     }
 
     static async getById(id: string): Promise<Story | undefined> {
-        if (!id) return undefined;
-        try {
-            const docRef = doc(db, this.collectionName, id);
-            const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                return {
-                    ...docSnap.data(),
-                    id: docSnap.id
-                } as Story;
-            }
-        } catch (e) {
-            console.error("Błąd pobierania story by id:", e);
-        }
-        return undefined;
+        return await this.getBackend().getById(id);
     }
 
     static async create(story: Story): Promise<void> {
-        try {
-            console.log("Tworzenie story z właścicielem:", story.ownerId);
-            
-            if (!story.ownerId || story.ownerId === "1") {
-                console.warn("Uwaga: Próba utworzenia story z niepoprawnym ownerId!");
-            }
-
-            await setDoc(doc(db, this.collectionName, story.id), story);
-        } catch (e) {
-            console.error("Błąd tworzenia story:", e);
-            throw e;
-        }
+        await this.getBackend().create(story);
     }
 
     static async edit(updatedStory: Story): Promise<void> {
-        try {
-            const docRef = doc(db, this.collectionName, updatedStory.id);
-            // Dodajemy ownerId do listy aktualizowanych pól
-            await updateDoc(docRef, {
-                name: updatedStory.name,
-                description: updatedStory.description,
-                status: updatedStory.status,
-                priority: updatedStory.priority,
-                ownerId: updatedStory.ownerId // Teraz zmiana właściciela zadziała
-            });
-        } catch (e) {
-            console.error("Błąd edycji story:", e);
-            throw e;
-        }
+        await this.getBackend().update(updatedStory);
+        eventBus.emit(APP_EVENTS.STORY_TASK_MODIFIED, {
+            storyName: updatedStory.name,
+            recipientId: updatedStory.ownerId
+        });
     }
 
     static async delete(storyId: string): Promise<void> {
-        if (!storyId) return;
-        try {
-            await deleteDoc(doc(db, this.collectionName, storyId));
-        } catch (e) {
-            console.error("Błąd usuwania story:", e);
-            throw e;
-        }
+        await this.getBackend().delete(storyId);
     }
 }

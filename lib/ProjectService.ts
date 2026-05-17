@@ -1,86 +1,43 @@
-import { db } from "../firebase";
-import { 
-    collection, 
-    getDocs, 
-    getDoc, 
-    doc, 
-    setDoc, 
-    deleteDoc, 
-    updateDoc, 
-    addDoc, where, query
-} from "firebase/firestore";
 import { Project } from "../types/project";
+import { FirebaseProjectBackend } from "./project/FirebaseProjectBackend";
+import { LocalStorageProjectBackend } from "./project/LocalstorageProjectBackend";
+import { eventBus, APP_EVENTS } from "@/utils/eventBus";
+import { StorageType } from "../settings"; 
 
 export class ProjectService {
-    private static collectionName = "projects";
+    private static getBackend() {
+        const currentStorage: StorageType = (localStorage.getItem("storage_type") as StorageType) || "firebase";
+        
+        if (currentStorage === "local") {
+            return LocalStorageProjectBackend;
+        }
+        return FirebaseProjectBackend;
+    }
 
     static async getAll(): Promise<Project[]> {
-        const querySnapshot = await getDocs(collection(db, this.collectionName));
-        return querySnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id
-        } as Project));
+        return await this.getBackend().getAll();
     }
 
     static async getById(id: string): Promise<Project | undefined> {
-        if (!id) return undefined;
-        const docRef = doc(db, this.collectionName, id);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            return {
-                ...docSnap.data(),
-                id: docSnap.id
-            } as Project;
-        }
-        return undefined;
+        return await this.getBackend().getById(id);
     }
 
     static async create(project: Project): Promise<void> {
         try {
-            await setDoc(doc(db, this.collectionName, project.id), project);
+            await this.getBackend().create(project);
 
-            await addDoc(collection(db, "notifications"), {
-                title: "Utworzono nowy projekt",
-                message: `Projekt "${project.name}" został utworzony.`,
-                date: new Date().toISOString(),
-                priority: "high",
-                isRead: false,
-                recipientId: project.ownerId 
-            });
+            eventBus.emit(APP_EVENTS.PROJECT_CREATED, project);
             
         } catch (e) {
-            console.error("Błąd zapisu projektu w Firebase:", e);
+            console.error("Błąd w ProjectService.create:", e);
         }
     }
 
     static async update(updatedProject: Project): Promise<void> {
-        try {
-            const docRef = doc(db, this.collectionName, updatedProject.id);
-            await updateDoc(docRef, {
-                name: updatedProject.name,
-                description: updatedProject.description,
-                ownerId: updatedProject.ownerId
-            });
-        } catch (e) {
-            console.error("Błąd edycji projektu w Firebase:", e);
-            throw e;
-        }
+        await this.getBackend().update(updatedProject);
     }
 
     static async delete(id: string): Promise<void> {
-        const storiesQuery = query(collection(db, "stories"), where("projectId", "==", id));
-        const storiesSnap = await getDocs(storiesQuery);
-        for (const storyDoc of storiesSnap.docs) {
-            const tasksQuery = query(collection(db, "tasks"), where("storyId", "==", storyDoc.id));
-            const tasksSnap = await getDocs(tasksQuery);
-            
-            const taskPromises = tasksSnap.docs.map(t => deleteDoc(doc(db, "tasks", t.id)));
-            await Promise.all(taskPromises);
-
-            await deleteDoc(doc(db, "stories", storyDoc.id));
-        }
-
-        await deleteDoc(doc(db, "projects", id));
+        await this.getBackend().delete(id);
     }
 }
